@@ -4,11 +4,15 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"os"
 
-	"github.com/365admin/365AdminApp/cmd/teamGov"
+	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd/teamGov"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
+
+var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -33,21 +37,42 @@ func Execute() {
 		os.Exit(1)
 	}
 }
-func addSubcommandsPaletts() {
-	rootCmd.AddCommand(teamGov.TeamGovCmd)
 
-}
 func init() {
+	cobra.OnInitialize(initConfig)
+
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.365Admin.yaml)")
+ //Add my subCommand palette here
+	rootCmd.AddCommand(teamGov.TeamGovCmd)
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.365Admin.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	addSubcommandsPaletts()
 }
 
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+	} else {
+		// Find home directory.
+		home, err := os.UserHomeDir()
+		cobra.CheckErr(err)
 
+		// Search config in home directory with name ".365Admin" (without extension).
+		viper.AddConfigPath(home)
+		viper.SetConfigType("yaml")
+		viper.SetConfigName(".365Admin")
+	}
+
+	viper.AutomaticEnv() // read in environment variables that match
+
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err == nil {
+		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+	}
+}
