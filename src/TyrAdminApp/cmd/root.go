@@ -1,16 +1,14 @@
 /*
 Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
 	"os"
 
+	"github.com/365admin/365AdminApp/cmd/teamGov"
 	"github.com/spf13/cobra"
 )
-
-
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -35,7 +33,10 @@ func Execute() {
 		os.Exit(1)
 	}
 }
+func addSubcommandsPaletts() {
+	rootCmd.AddCommand(teamGov.TeamGovCmd)
 
+}
 func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -46,6 +47,7 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	addSubcommandsPaletts()
 }
 
 
