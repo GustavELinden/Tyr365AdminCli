@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 var (
-	requestId int32
+	requestId int32 
 )
 // requeueCmd represents the requeue command
 var requeueCmd = &cobra.Command{
@@ -23,6 +23,10 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("requeue called")
+        //Print the requestId from the command line
+        
+        fmt.Println(requestId)
+   
 	},
 }
 
