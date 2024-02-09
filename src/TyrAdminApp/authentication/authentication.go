@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/spf13/viper"
+	viperConfig "github.com/GustavELinden/TyrAdminCli/365Admin/config"
 )
 
 func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) {
@@ -34,15 +34,16 @@ func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) 
 }
 
 func GetTokenForGovernanceApi() string {
+	viper, err := viperConfig.InitViper("config.json")
+fmt.Println("Using config file:", viper.GetString("M365managementAppClientId"))
+
 	authAdress := "https://login.microsoftonline.com/a2728528-eff8-409c-a379-7d900c45d9ba/oauth2/token"
 
-	// Define the body properties
 	bodyValues := url.Values{}
 	bodyValues.Set("grant_type", viper.GetString("grant_type"))
 	bodyValues.Set("client_id", viper.GetString("client_id"))
 	bodyValues.Set("client_secret", viper.GetString("client_secret"))
 	bodyValues.Set("resource", viper.GetString("resource"))
-
 	body := []byte(bodyValues.Encode())
 	// Make the POST request
 	resp, err := makePOSTRequest(authAdress, body)
