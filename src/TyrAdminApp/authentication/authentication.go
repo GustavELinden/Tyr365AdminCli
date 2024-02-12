@@ -6,9 +6,20 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	viperConfig "github.com/GustavELinden/TyrAdminCli/365Admin/config"
 )
+type TokenCache struct {
+    Token     string
+    ExpiresAt time.Time
+}
+var tokenCache *TokenCache
+
+func (t *TokenCache) IsValid() bool {
+    return time.Now().Before(t.ExpiresAt)
+}
+
 
 func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) {
 	// Encode the body values into a URL-encoded format
@@ -33,9 +44,8 @@ func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) 
 	return resp, nil
 }
 
-func GetTokenForGovernanceApi() string {
+func getTokenForGovernanceApi() string {
 	viper, err := viperConfig.InitViper("config.json")
-fmt.Println("Using config file:", viper.GetString("M365managementAppClientId"))
 
 	authAdress := "https://login.microsoftonline.com/a2728528-eff8-409c-a379-7d900c45d9ba/oauth2/token"
 
@@ -74,6 +84,25 @@ fmt.Println("Using config file:", viper.GetString("M365managementAppClientId"))
 	}
 
 	// Print the access token
-	fmt.Println("Access Token:", accessToken)
+	fmt.Println("Access Token aquired" )
   return accessToken
+}
+
+func GetAuthToken() (string, error) {
+    if tokenCache != nil && tokenCache.IsValid() {
+			fmt.Println("Token is valid")
+        return tokenCache.Token, nil
+    }
+
+    // Your existing auth logic here
+    // Assume newToken and expiresIn are obtained after authentication
+    newToken := getTokenForGovernanceApi()
+    expiresIn := 10 * time.Minute // Example duration
+
+    tokenCache = &TokenCache{
+        Token:     newToken,
+        ExpiresAt: time.Now().Add(expiresIn),
+    }
+
+    return newToken, nil
 }
