@@ -8,8 +8,11 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	auth "github.com/microsoft/kiota-authentication-azure-go"
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
+
 	// "github.com/microsoftgraph/msgraph-sdk-go/models"
 	// "github.com/microsoftgraph/msgraph-sdk-go/users"
+
+	viperConfig "github.com/GustavELinden/TyrAdminCli/365Admin/config"
 )
 
 type GraphHelper struct {
@@ -23,9 +26,11 @@ func NewGraphHelper() *GraphHelper {
 }
 
 func (g *GraphHelper) InitializeGraphForAppAuth() error {
-    clientId := os.Getenv("CLIENT_ID")
-    tenantId := os.Getenv("TENANT_ID")
-    clientSecret := os.Getenv("CLIENT_SECRET")
+  	viper, err := viperConfig.InitViper("config.json")
+
+    clientId := os.Getenv(viper.GetString("O365AzureAppClientId"))
+    tenantId := os.Getenv(viper.GetString("O365TenantName"))
+    clientSecret := os.Getenv(viper.GetString("O365AzureAppClientSecret"))
     credential, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, nil)
     if err != nil {
         return err

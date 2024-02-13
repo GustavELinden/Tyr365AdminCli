@@ -3,27 +3,20 @@ package teamGov
 import (
 	"fmt"
 
+	getgov "github.com/GustavELinden/TyrAdminCli/365Admin/httpFuncs"
 	"github.com/spf13/cobra"
 )
-var (
-	requestId int32 
-)
+
 // requeueCmd represents the requeue command
 var requeueCmd = &cobra.Command{
 	Use:   "requeue",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "This command requeues a request in the Teams Governance API. Flag : --requestId number",
+	Long: `This command requeues a request in the Teams Governance API. For example: 365Admin teamGov requeue --requestId 147999`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("requeue called")
-        //Print the requestId from the command line
-        
-        fmt.Println(requestId)
-   
+		if cmd.Flag("help").Changed {
+			cmd.Help()
+		}
+		getgov.Get("Requeue", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
 	},
 }
 
