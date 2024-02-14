@@ -1,6 +1,7 @@
 package getgov
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -47,20 +48,7 @@ type GroupDetails struct {
     ExchangeProperties interface{} `json:"exchangeProperties"`
 }
 
-// unmarshalResponse tries to unmarshal JSON into either a single Request object or a slice of Request objects
-// func unmarshalResponse(body []byte) ([]Request, error) {
-//     var requests []Request
-//     if err := json.Unmarshal(body, &requests); err == nil {
-//         return requests, nil
-//     }
 
-//     var singleRequest Request
-//     if err := json.Unmarshal(body, &singleRequest); err == nil {
-//         return []Request{singleRequest}, nil
-//     }
-
-//     return nil, errors.New("response did not match expected JSON structures")
-// }
 func Get(endpoint string, queryParams ...map[string]string) ([]byte, error) {
     viper, err := viperConfig.InitViper("config.json")
     if err != nil {
@@ -144,58 +132,98 @@ func PrintJSONResponseString(body *[]byte) error {
     fmt.Println(&responseString)
     return nil
 }
+func Post(endpoint string, queryParams map[string]string) ([]byte, error) {
+    viper, err := viperConfig.InitViper("config.json")
+    if err != nil {
+        return nil, fmt.Errorf("failed to initialize viper: %w", err)
+    }
 
-// Add more unmarshal functions as needed for other response types
+    token, err := authentication.GetAuthToken()
+    if err != nil || token == "" {
+        return nil, errors.New("failed to get authentication token")
+    }
 
-// func GetRequests(endpoint string, queryParams ...map[string]string) ([]Request, error) {
-//     viper, err := viperConfig.InitViper("config.json")
-//     if err != nil {
-//         return nil, fmt.Errorf("failed to initialize viper: %w", err)
-//     }
+    apiURL := viper.GetString("resource") + "/api/teams/" + endpoint
+    if len(queryParams) > 0 {
+        query := url.Values{}
+        for key, value := range queryParams {
+            query.Add(key, value)
+        }
+        apiURL += "?" + query.Encode()
+    }
 
-//     token := authentication.GetTokenForGovernanceApi()
-//     if token == "" {
-//         return nil, errors.New("failed to get authentication token")
-//     }
+    req, err := http.NewRequest("POST", apiURL, nil) // No body is sent
+    if err != nil {
+        return nil, fmt.Errorf("error creating request: %w", err)
+    }
+    req.Header.Set("Authorization", "Bearer "+token)
+    // No need to set Content-Type for a request without a body
 
-//     apiURL := viper.GetString("resource") + "/api/teams/" + endpoint
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        return nil, fmt.Errorf("error sending request: %w", err)
+    }
+    defer resp.Body.Close()
 
-//     if len(queryParams) > 0 {
-//         query := url.Values{}
-//         for key, value := range queryParams[0] {
-//             query.Add(key, value)
-//         }
-//         apiURL += "?" + query.Encode()
-//     }
+    if resp.StatusCode != http.StatusOK {
+        return nil, fmt.Errorf("unexpected response status: %s", resp.Status)
+    }
 
-//     req, err := http.NewRequest("GET", apiURL, nil)
-//     if err != nil {
-//         return nil, fmt.Errorf("error creating request: %w", err)
-//     }
+    response, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return nil, fmt.Errorf("error reading response body: %w", err)
+    }
 
-//     req.Header.Set("Authorization", "Bearer "+token)
+    return response, nil
+}
+func PostWithBody(endpoint string, queryParams map[string]string, body interface{}) ([]byte, error) {
+    viper, err := viperConfig.InitViper("config.json")
+    if err != nil {
+        return nil, fmt.Errorf("failed to initialize viper: %w", err)
+    }
 
-//     client := &http.Client{}
-//     resp, err := client.Do(req)
-//     if err != nil {
-//         return nil, fmt.Errorf("error sending request: %w", err)
-//     }
-//     defer resp.Body.Close()
+    token, err := authentication.GetAuthToken()
+    if err != nil || token == "" {
+        return nil, errors.New("failed to get authentication token")
+    }
 
-//     if resp.StatusCode != http.StatusOK {
-//         return nil, fmt.Errorf("unexpected response status: %s", resp.Status)
-//     }
+    apiURL := viper.GetString("resource") + "/api/teams/" + endpoint
+    if len(queryParams) > 0 {
+        query := url.Values{}
+        for key, value := range queryParams {
+            query.Add(key, value)
+        }
+        apiURL += "?" + query.Encode()
+    }
 
-//     body, err := io.ReadAll(resp.Body)
-//     if err != nil {
-//         return nil, fmt.Errorf("error reading response body: %w", err)
-//     }
+    jsonBody, err := json.Marshal(body)
+    if err != nil {
+        return nil, fmt.Errorf("error marshalling request body: %w", err)
+    }
 
-//     // Use the unmarshalResponse helper function to handle both potential response types
-//     requests, err := unmarshalResponse(body)
-//     if err != nil {
-//         return nil, err
-//     }
+    req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(jsonBody))
+    if err != nil {
+        return nil, fmt.Errorf("error creating request: %w", err)
+    }
+    req.Header.Set("Authorization", "Bearer "+token)
+    req.Header.Set("Content-Type", "application/json")
 
-//     return requests, nil
-// }
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        return nil, fmt.Errorf("error sending request: %w", err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        return nil, fmt.Errorf("unexpected response status: %s", resp.Status)
+    }
+
+    response, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return nil, fmt.Errorf("error reading response body: %w", err)
+    }
+
+    return response, nil
+}

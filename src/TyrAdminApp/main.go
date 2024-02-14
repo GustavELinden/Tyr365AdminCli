@@ -12,6 +12,6 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
-
+  
 	cmd.Execute()
 }

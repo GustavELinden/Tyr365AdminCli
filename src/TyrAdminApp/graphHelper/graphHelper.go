@@ -2,12 +2,14 @@ package graphhelper
 
 import (
 	"context"
-	"os"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	auth "github.com/microsoft/kiota-authentication-azure-go"
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
+	"github.com/microsoftgraph/msgraph-sdk-go/users"
 
 	// "github.com/microsoftgraph/msgraph-sdk-go/models"
 	// "github.com/microsoftgraph/msgraph-sdk-go/users"
@@ -27,10 +29,15 @@ func NewGraphHelper() *GraphHelper {
 
 func (g *GraphHelper) InitializeGraphForAppAuth() error {
   	viper, err := viperConfig.InitViper("config.json")
+    if err != nil {
+        fmt.Printf("Error reading config file: %v\n", err)
+    
+    }
 
-    clientId := os.Getenv(viper.GetString("O365AzureAppClientId"))
-    tenantId := os.Getenv(viper.GetString("O365TenantName"))
-    clientSecret := os.Getenv(viper.GetString("O365AzureAppClientSecret"))
+    clientId := viper.GetString("O365AzureAppClientId")
+    tenantId := viper.GetString("O365TenantName")
+    clientSecret := viper.GetString("O365AzureAppClientSecret")
+  
     credential, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, nil)
     if err != nil {
         return err
@@ -59,6 +66,7 @@ func (g *GraphHelper) InitializeGraphForAppAuth() error {
     return nil
 }
 
+
 func (g *GraphHelper) GetAppToken() (*string, error) {
     token, err := g.clientSecretCredential.GetToken(context.Background(), policy.TokenRequestOptions{
         Scopes: []string{
@@ -71,3 +79,49 @@ func (g *GraphHelper) GetAppToken() (*string, error) {
 
     return &token.Token, nil
 }
+func (g *GraphHelper) GetUsers() (models.UserCollectionResponseable, error) {
+    var topValue int32 = 25
+    query := users.UsersRequestBuilderGetQueryParameters{
+        // Only request specific properties
+        Select: []string{"displayName", "id", "mail"},
+        // Get at most 25 results
+        Top: &topValue,
+        // Sort by display name
+        Orderby: []string{"displayName"},
+    }
+
+    return g.appClient.Users().
+        Get(context.Background(),
+            &users.UsersRequestBuilderGetRequestConfiguration{
+                QueryParameters: &query,
+            })
+}
+
+
+// func listUsers(graphHelper *graphhelper.GraphHelper) {
+//     users, err := *graphHelper.GetUsers()
+//     if err != nil {
+//         log.Panicf("Error getting users: %v", err)
+//     }
+
+//     // Output each user's details
+//     for _, user := range users.GetValue() {
+//         fmt.Printf("User: %s\n", *user.GetDisplayName())
+//         fmt.Printf("  ID: %s\n", *user.GetId())
+
+//         noEmail := "NO EMAIL"
+//         email := user.GetMail()
+//         if email == nil {
+//             email = &noEmail
+//         }
+//         fmt.Printf("  Email: %s\n", *email)
+//     }
+
+//     // If GetOdataNextLink does not return nil,
+//     // there are more users available on the server
+//     nextLink := users.GetOdataNextLink()
+
+//     fmt.Println()
+//     fmt.Printf("More users available? %t\n", nextLink != nil)
+//     fmt.Println()
+// }

@@ -21,7 +21,10 @@ var updaterequeststatusCmd = &cobra.Command{
         if cmd.Flag("help").Changed {
             cmd.Help()
         }
-        getgov.Get("UpdateRequestStatus", map[string]string{"requestId": fmt.Sprintf("%d", requestId), "status": status})
+      _, err :=  getgov.Post("UpdateRequestStatus", map[string]string{"requestId": fmt.Sprintf("%d", requestId), "status": status})
+      if err != nil {
+            fmt.Println(err)
+        }
     },
 }
 

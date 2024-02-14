@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd/graphCommands"
 	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd/teamGov"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -49,7 +50,7 @@ func init() {
 	// will be global for your application.
  //Add my subCommand palette here
 	rootCmd.AddCommand(teamGov.TeamGovCmd)
-	rootCmd.AddCommand(graphCommands.testGraphCmd)
+	rootCmd.AddCommand(graphCommands.TestGraphCmd)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config.json)")
 
 	// Cobra also supports local flags, which will only run
