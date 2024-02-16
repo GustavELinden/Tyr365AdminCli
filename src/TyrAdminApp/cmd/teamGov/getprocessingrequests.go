@@ -6,7 +6,6 @@ package teamGov
 import (
 	"fmt"
 
-	getgov "github.com/GustavELinden/TyrAdminCli/365Admin/httpFuncs"
 	"github.com/spf13/cobra"
 )
 
@@ -20,12 +19,12 @@ var getprocessingrequestsCmd = &cobra.Command{
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
-		body, err := getgov.Get("GetProcessingRequests")
+		body, err := Get("GetProcessingRequests")
 if err != nil {
 	fmt.Println("Error:", err)
 	return
 }
-requests, err := getgov.UnmarshalInteger(&body);
+requests, err := UnmarshalInteger(&body);
 if err != nil {
 	fmt.Println("Error:", err)
 	return

@@ -3,7 +3,6 @@ package teamGov
 import (
 	"fmt"
 
-	getgov "github.com/GustavELinden/TyrAdminCli/365Admin/httpFuncs"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +20,7 @@ var updaterequeststatusCmd = &cobra.Command{
         if cmd.Flag("help").Changed {
             cmd.Help()
         }
-      _, err :=  getgov.Post("UpdateRequestStatus", map[string]string{"requestId": fmt.Sprintf("%d", requestId), "status": status})
+      _, err :=  Post("UpdateRequestStatus", map[string]string{"requestId": fmt.Sprintf("%d", requestId), "status": status})
       if err != nil {
             fmt.Println(err)
         }

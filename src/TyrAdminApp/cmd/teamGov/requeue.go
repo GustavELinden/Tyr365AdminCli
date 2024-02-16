@@ -3,7 +3,6 @@ package teamGov
 import (
 	"fmt"
 
-	getgov "github.com/GustavELinden/TyrAdminCli/365Admin/httpFuncs"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +15,7 @@ var requeueCmd = &cobra.Command{
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
-		getgov.Get("Requeue", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
+		Get("Requeue", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
 	},
 }
 

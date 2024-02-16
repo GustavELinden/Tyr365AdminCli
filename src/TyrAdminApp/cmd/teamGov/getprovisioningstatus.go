@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	getgov "github.com/GustavELinden/TyrAdminCli/365Admin/httpFuncs"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -17,12 +16,12 @@ var getprovisioningstatusCmd = &cobra.Command{
     		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
-        body, err := getgov.Get("GetProvisioningStatus", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
+        body, err := Get("GetProvisioningStatus", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
         if err != nil {
             fmt.Println("Error:", err)
             return
         }
-        requests, err := getgov.UnmarshalRequests(&body);
+        requests, err := UnmarshalRequests(&body);
         if err != nil {
             fmt.Println("Error:", err)
             return

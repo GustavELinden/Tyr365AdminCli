@@ -6,7 +6,6 @@ package teamGov
 import (
 	"fmt"
 
-	getgov "github.com/GustavELinden/TyrAdminCli/365Admin/httpFuncs"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +19,7 @@ var getaverageprovisioningtimeCmd = &cobra.Command{
 				if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
-		body, err := getgov.Get("AverageProvisionTime")
+		body, err := Get("AverageProvisionTime")
 			if err != nil {
 				fmt.Println("Error:", err)
 				return

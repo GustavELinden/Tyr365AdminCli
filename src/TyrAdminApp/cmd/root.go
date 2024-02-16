@@ -50,7 +50,7 @@ func init() {
 	// will be global for your application.
  //Add my subCommand palette here
 	rootCmd.AddCommand(teamGov.TeamGovCmd)
-	rootCmd.AddCommand(graphCommands.TestGraphCmd)
+	rootCmd.AddCommand(graphCommands.GraphCmd)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config.json)")
 
 	// Cobra also supports local flags, which will only run

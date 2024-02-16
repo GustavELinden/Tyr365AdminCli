@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 
-	getgov "github.com/GustavELinden/TyrAdminCli/365Admin/httpFuncs"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -22,12 +21,12 @@ var getprocessingjobsCmd = &cobra.Command{
 				if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
-		body, err := getgov.Get("GetProcessingJobs")
+		body, err := Get("GetProcessingJobs")
 if err != nil {
 	fmt.Println("Error:", err)
 	return
 }
-requests, err := getgov.UnmarshalRequests(&body);
+requests, err := UnmarshalRequests(&body);
 if err != nil {
 	fmt.Println("Error:", err)
 	return

@@ -1,24 +1,21 @@
-package authentication
+package teamGov
 
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
-	"time"
 
 	viperConfig "github.com/GustavELinden/TyrAdminCli/365Admin/config"
 )
-type TokenCache struct {
-    Token     string
-    ExpiresAt time.Time
-}
-var tokenCache *TokenCache
 
-func (t *TokenCache) IsValid() bool {
-    return time.Now().Before(t.ExpiresAt)
+type TokenCached struct {
+    Token     string
 }
+var TokenCache string
+
 
 
 func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) {
@@ -44,9 +41,12 @@ func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) 
 	return resp, nil
 }
 
-func getTokenForGovernanceApi() string {
+func AuthGovernanceApi() (string, error){
 	viper, err := viperConfig.InitViper("config.json")
-
+ if err != nil {
+	 fmt.Printf("Error initializing viper: %v\n", err)
+	 return "", errors.New("error initializing viper")
+	  }
 	authAdress := "https://login.microsoftonline.com/a2728528-eff8-409c-a379-7d900c45d9ba/oauth2/token"
 
 	bodyValues := url.Values{}
@@ -59,50 +59,53 @@ func getTokenForGovernanceApi() string {
 	resp, err := makePOSTRequest(authAdress, body)
 	if err != nil {
 		fmt.Printf("Error making POST request: %v\n", err)
-		return ""
+		return "", errors.New("error making POST request")
 	}
 	defer resp.Body.Close()
 
 	// Check the response status code
 	if resp.StatusCode != http.StatusOK {
 		fmt.Printf("Unexpected response status code: %d\n", resp.StatusCode)
-		return ""
+		return "", errors.New("unexpected response status code")
 	}
 
 	// Decode the response body
 	var tokenResponse map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
 		fmt.Printf("Error decoding response body: %v\n", err)
-		return ""
+		return "", 		errors.New("error decoding response body")
 	}
 
 	// Extract the access token
 	accessToken, ok := tokenResponse["access_token"].(string)
 	if !ok {
 		fmt.Println("Access token not found in response")
-		return ""
+		return "", 		errors.New("access token not found in response")
 	}
-
 	// Print the access token
 	fmt.Println("Access Token aquired" )
-  return accessToken
+  return accessToken, nil
 }
 
-func GetAuthToken() (string, error) {
-    if tokenCache != nil && tokenCache.IsValid() {
-			fmt.Println("Token is valid")
-        return tokenCache.Token, nil
-    }
 
-    // Your existing auth logic here
-    // Assume newToken and expiresIn are obtained after authentication
-    newToken := getTokenForGovernanceApi()
-    expiresIn := 10 * time.Minute // Example duration
-
-    tokenCache = &TokenCache{
-        Token:     newToken,
-        ExpiresAt: time.Now().Add(expiresIn),
-    }
-
-    return newToken, nil
+func RetrieveAuthToken() (string, error) {
+		return TokenCache, nil
+}
+// ManualAuthenticate handles the manual initiation of the authentication process
+// func ManualAuthenticate() error {
+//     // Authenticate and update the token cache
+//     newToken, err := AuthGovernanceApi() // Adjust this function to return the expiry time and error
+// 	  fmt.Println(newToken)
+//     if err != nil {
+//         return err // Return the error to be handled or logged
+//     }
+   
+//     // Update tokenCache with the new token and expiry time
+//    TokenCache = newToken
+   
+//     fmt.Println(TokenCache)
+// 		return nil
+// }
+func PrintToken() {
+	fmt.Println(TokenCache)
 }
