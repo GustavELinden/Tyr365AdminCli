@@ -11,7 +11,7 @@ import (
 
 // getprocessingrequestsCmd represents the getprocessingrequests command
 var getprocessingrequestsCmd = &cobra.Command{
-	Use:   "getprocessingrequests",
+	Use:   "countprequests",
 	Short: "Get the number of processing requests in the Teams Governance API.",
 	Long: `This command gets the number of processing requests in the Teams Governance API. For example: 365Admin teamGov getprocessingrequests`,
 	Run: func(cmd *cobra.Command, args []string) {

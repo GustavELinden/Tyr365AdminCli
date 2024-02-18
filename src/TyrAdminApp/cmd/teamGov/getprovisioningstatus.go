@@ -9,7 +9,7 @@ import (
 )
 
 var getprovisioningstatusCmd = &cobra.Command{
-    Use:   "getprovisioningstatus",
+    Use:   "getrequest",
     Short: "Get provisioning status of a request. Flag : --requestId number",
     Long:  `Get the provisioning status of a request. For example: 365Admin teamGov getprovisioningstatus --requestId 147999`,
     Run: func(cmd *cobra.Command, args []string) {
@@ -26,29 +26,7 @@ var getprovisioningstatusCmd = &cobra.Command{
             fmt.Println("Error:", err)
             return
         }
-// Create a table to display the response data
-table := tablewriter.NewWriter(os.Stdout)
-        table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Endpoint", "CallerID", "Status", "ProvisioningStep", "Message", "InitiatedBy", "Modified", "RetryCount", "QueuePriority"}) // Customize the table header as needed
-        for _, req := range requests {
-            row := []string{
-                fmt.Sprintf("%d", req.ID),
-                req.Created,
-                req.GroupID,
-                req.TeamName,
-                req.Endpoint,
-                req.CallerID,
-                req.Status,
-                req.ProvisioningStep,
-                req.Message,
-                req.InitiatedBy,
-                req.Modified,
-                fmt.Sprintf("%v", req.RetryCount),
-                fmt.Sprintf("%d", req.QueuePriority),
-            
-            }
-            table.Append(row)
-        }
-        table.Render()
+        RenderRequests(requests)
     },
 }
 
@@ -61,4 +39,27 @@ func init() {
     TeamGovCmd.AddCommand(getprovisioningstatusCmd)
 }
 
-
+func RenderRequests(requests []Request) {
+    // Create a table to display the response data
+    table := tablewriter.NewWriter(os.Stdout)
+    table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Endpoint", "CallerID", "Status", "ProvisioningStep", "Message", "InitiatedBy", "Modified", "RetryCount", "QueuePriority"}) // Customize the table header as needed
+    for _, req := range requests {
+        row := []string{
+            fmt.Sprintf("%d", req.ID),
+            req.Created,
+            req.GroupID,
+            req.TeamName,
+            req.Endpoint,
+            req.CallerID,
+            req.Status,
+            req.ProvisioningStep,
+            req.Message,
+            req.InitiatedBy,
+            req.Modified,
+            fmt.Sprintf("%v", req.RetryCount),
+            fmt.Sprintf("%d", req.QueuePriority),
+        }
+        table.Append(row)
+    }
+    table.Render()
+}

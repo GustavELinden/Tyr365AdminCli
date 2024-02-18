@@ -13,7 +13,7 @@ import (
 
 // getprocessingjobsCmd represents the getprocessingjobs command
 var getprocessingjobsCmd = &cobra.Command{
-	Use:   "getprocessingjobs",
+	Use:   "getprocessing",
 	Short: "Get the processing jobs in the Teams Governance API.",
 	Long: `This command gets the processing jobs in the Teams Governance API. For example: 365Admin teamGov getprocessingjobs. 
     The response is a table with the following columns: ID, Created, GroupID, TeamName, Endpoint, CallerID, Status, ProvisioningStep, Message, InitiatedBy, Modified, RetryCount, QueuePriority.`,

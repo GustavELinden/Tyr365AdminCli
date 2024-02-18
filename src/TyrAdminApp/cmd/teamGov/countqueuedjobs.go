@@ -11,7 +11,7 @@ import (
 
 // countqueuedjobsCmd represents the countqueuedjobs command
 var countqueuedjobsCmd = &cobra.Command{
-	Use:   "countqueuedjobs",
+	Use:   "countq",
 	Short: "counts how many jobs are queued in the Teams Governance API.",
 	Long: `This command counts how many jobs are queued in the Teams Governance API. For example: 365Admin teamGov countqueuedjobs`,
 	Run: func(cmd *cobra.Command, args []string) {
