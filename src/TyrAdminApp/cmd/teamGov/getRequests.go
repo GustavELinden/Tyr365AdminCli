@@ -32,6 +32,20 @@ type Request struct {
     QueuePriority      int         `json:"QueuePriority"`
     GroupDetails       GroupDetails `json:"GroupDetails"`
 }
+type Parameters struct {
+    GroupID        string `json:"groupId"`
+    TemplateId     int    `json:"templateId"`
+    Description    string `json:"description"`
+    CallerId       string `json:"callerId"`
+    InitiatedBy    string `json:"initiatedBy"`
+    FlowParameters struct {
+        TemplateID        string `json:"templateID"`
+        ProjectNumber     string `json:"ProjectNumber"`
+        TyrAProcessType   string `json:"TyrAProcessType"`
+    } `json:"flowParameters"`
+    ClientTaskId   int `json:"clientTaskId"`
+    // Add other fields as needed
+}
 type GroupDetails struct {
     GroupID           string    `json:"groupId"`
     DisplayName       string    `json:"displayName"`
@@ -43,7 +57,7 @@ type GroupDetails struct {
     Team              string    `json:"team"`
     Yammer            string    `json:"yammer"`
     Label             string    `json:"label"`
-    ExpirationDateTime string   `json:"expirationDateTime"` // Assuming expirationDateTime is a date/time field
+    ExpirationDateTime string   `json:"expirationDateTime"` 
     ExchangeProperties interface{} `json:"exchangeProperties"`
 }
 

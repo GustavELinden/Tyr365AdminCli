@@ -1,21 +1,23 @@
 package teamGov
 
 import (
+	"encoding/json"
 	"fmt"
 
 	saveToFile "github.com/GustavELinden/TyrAdminCli/365Admin/SaveToFile"
 	tblprinter "github.com/GustavELinden/TyrAdminCli/365Admin/tblPrinter"
+	"github.com/itchyny/gojq"
 	"github.com/spf13/cobra"
 )
 
 // Assuming these variables are declared at the package level to store flag values
 var (
+    jqQuery string
     endpoint       string
     created        string
     createdEnd     string
     callerId       string
     initiatedByUser string
-
     top            int // Assuming there's a sensible default or 0 indicates "use default"
 )
 
@@ -62,7 +64,31 @@ var queryCmd = &cobra.Command{
         }
 
         body, err := GetQuery("CliQuery", queryParams)
-       requests, err := UnmarshalRequests(&body);
+        if err != nil {
+            fmt.Println("Error:", err)
+            return
+        }
+        requests, err := UnmarshalRequests(&body);
+      
+        if err != nil {
+            fmt.Println("Error:", err)
+            return
+        }
+       
+     fmt.Println("Applying jq query:", jqQuery)      
+    // if jqQuery != "" {
+    //     fmt.Println("Applying jq query:", jqQuery)
+        
+    //     filteredRequests, err := applyJQQuery(requests, jqQuery)
+    //     if err != nil {
+    //         fmt.Println("Error applying jq query:", err)
+    //         return
+    //     }
+    //     requests = filteredRequests // Use filtered results for further processing
+    // }
+
+
+    //    requests, err = UnmarshalRequests(&body);
        if cmd.Flag("excel").Changed {
         var fileName string
         fmt.Println("Name your new excel file:")
@@ -93,5 +119,57 @@ func init() {
     queryCmd.Flags().Bool("help", false, "Print help for the command")  
     queryCmd.Flags().Bool("excel", false, "Save the response to an Excel file")
     queryCmd.Flags().Bool("print", false, "Print the response as a table")
+    queryCmd.Flags().StringVarP(&jqQuery, "jq", "j", "", "jq query to filter the JSON output")
     TeamGovCmd.AddCommand(queryCmd) // Assuming TeamGovCmd is your root or sub-root command
 }
+
+func applyJQQuery(requests []Request, jqQuery string) ([]Request, error) {
+    // Marshal requests into JSON
+    jsonData, err := json.Marshal(requests)
+    if err != nil {
+        return nil, fmt.Errorf("error marshaling requests: %v", err)
+    }
+
+    // Unmarshal JSON into an interface{} for gojq
+    var genericData interface{}
+    err = json.Unmarshal(jsonData, &genericData)
+    if err != nil {
+        return nil, fmt.Errorf("error unmarshaling JSON to interface{}: %v", err)
+    }
+
+    // Parse and apply the jq query
+    query, err := gojq.Parse(jqQuery)
+    if err != nil {
+        return nil, fmt.Errorf("error parsing jq query: %w", err)
+    }
+
+    iter := query.Run(genericData) // Run the query
+    var result []interface{} // Use interface{} to collect results
+    for {
+        v, ok := iter.Next()
+        if !ok {
+            break
+        }
+        if _, ok := v.(error); ok {
+            continue // Handle or log error as appropriate
+        }
+        result = append(result, v)
+    }
+    fmt.Println(result)
+    // Marshal the result back to JSON then unmarshal into []Request
+    resultJSON, err := json.Marshal(result)
+    if err != nil {
+        return nil, fmt.Errorf("error marshaling result to JSON: %w", err)
+    }
+
+    var filteredRequests []Request
+    err = json.Unmarshal(resultJSON, &filteredRequests)
+    if err != nil {
+        return nil, fmt.Errorf("error unmarshaling result JSON to []Request: %w", err)
+    }
+
+    return filteredRequests, nil
+}
+
+
+
