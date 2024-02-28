@@ -15,7 +15,12 @@ var requeueCmd = &cobra.Command{
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
-		Get("Requeue", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
+		body, err := Get("Requeue", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		fmt.Println(string(body))
 	},
 }
 

@@ -19,13 +19,14 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-
+ 
 	Run: func(cmd *cobra.Command, args []string) {
- _, err := graphHelper.GetGroupById("12c53ea7-9b08-4b4e-a1d7-06c8ced53d8c")
+ group, err := graphHelper.GetGroupById("12c53ea7-9b08-4b4e-a1d7-06c8ced53d8c")
 	 if err != nil {		
 		fmt.Println("Error:", err)
 		return
 	}
+	fmt.Println(group)
 
 	 
 	},

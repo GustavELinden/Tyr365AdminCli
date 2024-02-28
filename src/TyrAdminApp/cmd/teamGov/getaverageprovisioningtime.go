@@ -32,3 +32,6 @@ func init() {
 	TeamGovCmd.AddCommand(getaverageprovisioningtimeCmd)
 
 }
+
+
+//https://teams.microsoft.com/l/team/19%3AsfBeq4-sPDdPSr8rt-EKBH4ee4SMwAETyMOdQX0iXnc1%40thread.tacv2/conversations?groupId=3e763cb7-606f-4aaa-a6c2-693833c0f1ca&tenantId=fd6c9945-d5d1-423c-acf9-2a5431314398

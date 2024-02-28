@@ -60,7 +60,14 @@ type GroupDetails struct {
     ExpirationDateTime string   `json:"expirationDateTime"` 
     ExchangeProperties interface{} `json:"exchangeProperties"`
 }
-
+type ManagedTeam struct {
+	Id        int    `json:"Id"`
+	GroupId   string `json:"groupId"`
+	TeamName  string `json:"teamName"`
+	Status    string `json:"status"`
+	Origin    string `json:"origin"`
+	Retention string `json:"retention"`
+}
 
 func Get(endpoint string, queryParams ...map[string]string) ([]byte, error) {
 
@@ -169,6 +176,80 @@ func GetQuery(targetEndpoint string, queryParams map[string]string) ([]byte, err
     }
 
     return body, nil
+}
+
+func QueryManaged(groupId, teamName, status, origin, retention, fields string) ([]ManagedTeam, error) {
+	// Initialize Viper to load configuration
+	viper, err := viperConfig.InitViper("config.json")
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize viper: %w", err)
+	}
+
+	// Retrieve the authentication token
+	token, err := AuthGovernanceApi()
+	if err != nil || token == "" {
+		return nil, fmt.Errorf("failed to get authentication token: %v", err)
+	}
+
+	// Construct the API URL and query parameters
+	apiURL := viper.GetString("resource") + "/api/teams/query"
+	query := url.Values{}
+	if groupId != "" {
+		query.Set("groupId", groupId)
+	}
+	if teamName != "" {
+		query.Set("teamName", teamName)
+	}
+	if status != "" {
+		query.Set("status", status)
+	}
+	if origin != "" {
+		query.Set("origin", origin)
+	}
+	if retention != "" {
+		query.Set("retention", retention)
+	}
+	if fields != "" {
+		query.Set("fields", fields)
+	}
+
+	// Append query string to the API URL
+	if len(query) > 0 {
+		apiURL += "?" + query.Encode()
+	}
+
+	// Create the HTTP GET request
+	req, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	// Execute the HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check the response status code
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected response status: %s", resp.Status)
+	}
+
+	// Read and unmarshal the response body
+	var teams []ManagedTeam
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+	err = json.Unmarshal(body, &teams)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshaling response: %w", err)
+	}
+
+	return teams, nil
 }
 
 func Post(endpoint string, queryParams map[string]string) ([]byte, error) {
@@ -282,7 +363,21 @@ func UnmarshalRequests(body *[]byte) ([]Request, error) {
 
     return nil, fmt.Errorf("error unmarshalling to Request or []Request: %w", err)
 }
+func UnmarshalManagedTeams(body *[]byte) ([]ManagedTeam, error) {
+    var managedTeam []ManagedTeam
+    err := json.Unmarshal(*body, &managedTeam)
+    if err == nil {
+        return managedTeam, nil
+    }
 
+    var request ManagedTeam
+    err = json.Unmarshal(*body, &request)
+    if err == nil {
+        return []ManagedTeam{request}, nil
+    }
+
+    return nil, fmt.Errorf("error unmarshalling to Request or []Request: %w", err)
+}
 func UnmarshalInteger(body *[]byte) (int, error) {
     var value int
     err := json.Unmarshal(*body, &value)

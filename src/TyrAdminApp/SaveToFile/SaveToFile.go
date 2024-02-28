@@ -1,7 +1,10 @@
 package saveToFile
 
 import (
+	"encoding/json"
 	"fmt"
+
+	"os"
 	"reflect"
 	"time"
 
@@ -52,5 +55,47 @@ func SaveToExcel(data interface{}, fileName string) error {
 	}
 
 	fmt.Printf("Excel file created in %s\n", time.Since(start))
+	return nil
+}
+
+func SaveDataToJSONFile(data interface{}, filename string) error {
+	// Marshal the data into JSON
+	jsonData, err := json.MarshalIndent(data, "", "    ")
+	if err != nil {
+		return fmt.Errorf("error marshaling data: %w", err)
+	}
+
+	// Write the JSON data to file
+	err = os.WriteFile(filename, jsonData, 0644)
+	
+	if err != nil {
+		return fmt.Errorf("error writing to file: %w", err)
+	}
+
+	fmt.Printf("Data successfully saved to %s\n", filename)
+	return nil
+}
+func ReadDataFromJSONFile(filename string, data interface{}) error {
+	// Read the JSON data from file
+	fileData, err := os.ReadFile(filename)
+	if err != nil {
+		return fmt.Errorf("error reading from file: %w", err)
+	}
+
+	// Unmarshal the JSON data into the provided data structure
+	// Note: Ensure that `data` is a pointer to the expected structure
+	err = json.Unmarshal(fileData, data)
+	if err != nil {
+		return fmt.Errorf("error unmarshaling JSON: %w", err)
+	}
+
+	// Convert the unmarshaled data back to JSON for pretty printing
+	// prettyJSON, err := json.MarshalIndent(data, "", "    ")
+	// if err != nil {
+	// 	return fmt.Errorf("error marshaling data for print: %w", err)
+	// }
+
+	// fmt.Printf("Data successfully read from %s:\n", filename)
+	// fmt.Println(string(prettyJSON))
 	return nil
 }

@@ -83,7 +83,7 @@ func AuthGovernanceApi() (string, error){
 		return "", 		errors.New("access token not found in response")
 	}
 	// Print the access token
-	fmt.Println("Access Token aquired" )
+
   return accessToken, nil
 }
 

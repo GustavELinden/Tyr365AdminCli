@@ -3,10 +3,11 @@ package teamGov
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"sync"
 
 	saveToFile "github.com/GustavELinden/TyrAdminCli/365Admin/SaveToFile"
-	tblprinter "github.com/GustavELinden/TyrAdminCli/365Admin/tblPrinter"
-	"github.com/itchyny/gojq"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -19,6 +20,7 @@ var (
     callerId       string
     initiatedByUser string
     top            int // Assuming there's a sensible default or 0 indicates "use default"
+    templateID     int
 )
 
 // newCmd represents the command for the new endpoint
@@ -74,29 +76,20 @@ var queryCmd = &cobra.Command{
             fmt.Println("Error:", err)
             return
         }
-       
-     fmt.Println("Applying jq query:", jqQuery)      
-    // if jqQuery != "" {
-    //     fmt.Println("Applying jq query:", jqQuery)
-        
-    //     filteredRequests, err := applyJQQuery(requests, jqQuery)
-    //     if err != nil {
-    //         fmt.Println("Error applying jq query:", err)
-    //         return
-    //     }
-    //     requests = filteredRequests // Use filtered results for further processing
-    // }
 
+       if cmd.Flag("templateID").Changed {
+        if templateID == 0 {
+            fmt.Println("Please provide a template ID")
+            return
+        }
+        RunGORutine(requests, templateID)
+       }
 
-    //    requests, err = UnmarshalRequests(&body);
        if cmd.Flag("excel").Changed {
-        var fileName string
-        fmt.Println("Name your new excel file:")
-        fmt.Scanln(&fileName)
-        saveToFile.SaveToExcel(requests, fileName)
+        savedToFile(&requests)
     } 
     if cmd.Flag("print").Changed {
-        tblprinter.RenderTable(requests)
+        renderRequests(requests)
     }
 if err != nil {
 	fmt.Println("Error:", err)
@@ -120,56 +113,91 @@ func init() {
     queryCmd.Flags().Bool("excel", false, "Save the response to an Excel file")
     queryCmd.Flags().Bool("print", false, "Print the response as a table")
     queryCmd.Flags().StringVarP(&jqQuery, "jq", "j", "", "jq query to filter the JSON output")
+    queryCmd.Flags().IntVarP(&templateID, "templateID", "T", 0, "Template ID to filter the requests")
     TeamGovCmd.AddCommand(queryCmd) // Assuming TeamGovCmd is your root or sub-root command
 }
+func renderRequests(requests []Request) {
+	// Reflect the slice to work with its elements
+	table := tablewriter.NewWriter(os.Stdout)
+        table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Endpoint", "CallerID", "Status", "ProvisioningStep", "Message", "InitiatedBy", "Modified", "RetryCount", "QueuePriority"}) // Customize the table header as needed
 
-func applyJQQuery(requests []Request, jqQuery string) ([]Request, error) {
-    // Marshal requests into JSON
-    jsonData, err := json.Marshal(requests)
-    if err != nil {
-        return nil, fmt.Errorf("error marshaling requests: %v", err)
-    }
-
-    // Unmarshal JSON into an interface{} for gojq
-    var genericData interface{}
-    err = json.Unmarshal(jsonData, &genericData)
-    if err != nil {
-        return nil, fmt.Errorf("error unmarshaling JSON to interface{}: %v", err)
-    }
-
-    // Parse and apply the jq query
-    query, err := gojq.Parse(jqQuery)
-    if err != nil {
-        return nil, fmt.Errorf("error parsing jq query: %w", err)
-    }
-
-    iter := query.Run(genericData) // Run the query
-    var result []interface{} // Use interface{} to collect results
-    for {
-        v, ok := iter.Next()
-        if !ok {
-            break
+        // Populate the table with data from the response
+        for _, req := range requests {
+            row := []string{
+                fmt.Sprintf("%d", req.ID),
+                req.Created,
+                req.GroupID,
+                req.TeamName,
+                req.Endpoint,
+                req.CallerID,
+                req.Status,
+                req.ProvisioningStep,
+                req.Message,
+                req.InitiatedBy,
+                req.Modified,
+                fmt.Sprintf("%v", req.RetryCount),
+                fmt.Sprintf("%d", req.QueuePriority),
+            
+            }
+            table.Append(row)
         }
-        if _, ok := v.(error); ok {
-            continue // Handle or log error as appropriate
-        }
-        result = append(result, v)
-    }
-    fmt.Println(result)
-    // Marshal the result back to JSON then unmarshal into []Request
-    resultJSON, err := json.Marshal(result)
-    if err != nil {
-        return nil, fmt.Errorf("error marshaling result to JSON: %w", err)
+
+        // Render the table
+        table.Render()
     }
 
-    var filteredRequests []Request
-    err = json.Unmarshal(resultJSON, &filteredRequests)
-    if err != nil {
-        return nil, fmt.Errorf("error unmarshaling result JSON to []Request: %w", err)
+
+func RunGORutine(requests []Request, templateID int) {
+   var wg sync.WaitGroup
+    requestsChan := make(chan Request)
+    resultsChan := make(chan Request) // Channel to collect matching requests
+
+    // Start worker goroutines
+    numWorkers := 20
+    for i := 0; i < numWorkers; i++ {
+        wg.Add(1)
+        go worker(&wg,templateID , requestsChan, resultsChan)
     }
 
-    return filteredRequests, nil
+    // Collector goroutine to gather results
+    go func() {
+        wg.Wait()
+        close(resultsChan) // Close results channel once all workers are done
+    }()
+
+    // Send requests to the workers
+    for _, req := range requests {
+        requestsChan <- req
+    }
+    close(requestsChan) // Signal workers that no more requests are coming
+
+    // Collect and process matching requests
+    var matchedRequests []Request
+    for req := range resultsChan {
+        matchedRequests = append(matchedRequests, req)
+    }
+
+    renderRequests(matchedRequests)
 }
 
+func worker(wg *sync.WaitGroup, templateID int ,requestsChan <-chan Request, resultsChan chan<- Request) {
+    defer wg.Done()
+    for req := range requestsChan {
+        var params Parameters
+        if err := json.Unmarshal([]byte(req.Parameters), &params); err != nil {
+            fmt.Printf("Error unmarshaling Parameters for request ID %d: %v\n", req.ID, err)
+            continue
+        }
 
+        if params.TemplateId == templateID { // Your filter criteria
+            resultsChan <- req // Send matching requests to the results channel
+        }
+    }
+}
 
+func savedToFile(requests *[]Request) {
+      var fileName string
+        fmt.Println("Name your new excel file:")
+        fmt.Scanln(&fileName)
+        saveToFile.SaveToExcel(requests, fileName)
+}

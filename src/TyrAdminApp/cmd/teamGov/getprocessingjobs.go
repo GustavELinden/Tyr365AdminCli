@@ -4,6 +4,7 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package teamGov
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -22,19 +23,42 @@ var getprocessingjobsCmd = &cobra.Command{
 			cmd.Help()
 		}
 		body, err := Get("GetProcessingJobs")
-if err != nil {
-	fmt.Println("Error:", err)
-	return
-}
-requests, err := UnmarshalRequests(&body);
-if err != nil {
-	fmt.Println("Error:", err)
-	return
+            if err != nil {
+                fmt.Println("Error:", err)
+                return
+            }
+            requests, err := UnmarshalRequests(&body);
+            if err != nil {
+                fmt.Println("Error:", err)
+                return
+            }
+        //    RenderData(requests)
+              if cmd.Flag("output").Changed {
+             outData,_ := json.Marshal(requests)
+            fmt.Println(string(outData))
+        }else {
+            RenderData(requests)
+        }
+        },
+    PersistentPreRun: func(cmd *cobra.Command, args []string) {
+        // Parse flags before the command runs
+        err := cmd.Flags().Parse(args)
+        if err != nil {
+            fmt.Println("Error parsing flags:", err)
+        }
+    
+	},
 }
 
-// Create a table to display the response data
-table := tablewriter.NewWriter(os.Stdout)
-        table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Endpoint", "CallerID", "Status", "ProvisioningStep", "Message", "InitiatedBy", "Modified", "RetryCount", "QueuePriority"}) // Customize the table header as needed
+func init() {
+
+  TeamGovCmd.AddCommand(getprocessingjobsCmd)
+
+}
+
+func RenderData(requests []Request){
+    table := tablewriter.NewWriter(os.Stdout)
+        table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Endpoint", "CallerID", "Status", "ProvisioningStep", "Message", "InitiatedBy", "Modified"}) // Customize the table header as needed
 
         // Populate the table with data from the response
         for _, req := range requests {
@@ -59,19 +83,4 @@ table := tablewriter.NewWriter(os.Stdout)
 
         // Render the table
         table.Render()
-    },
-    PersistentPreRun: func(cmd *cobra.Command, args []string) {
-        // Parse flags before the command runs
-        err := cmd.Flags().Parse(args)
-        if err != nil {
-            fmt.Println("Error parsing flags:", err)
-        }
-    
-	},
-}
-
-func init() {
-
-  TeamGovCmd.AddCommand(getprocessingjobsCmd)
-
-}
+    }
