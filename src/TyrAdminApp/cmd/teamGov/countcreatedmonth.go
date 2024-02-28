@@ -14,7 +14,8 @@ var Createdmonth int32
 var countcreatedmonthCmd = &cobra.Command{
 	Use:   "countcreatedmonth",
 	Short: "Returns the number of requests created in the current month.",
-	Long: `Returns the number of requests created in the current month. For example: 365Admin teamGov countcreatedmonth`,
+	Long: `Returns the number of requests created in the current month. For example: 365Admin teamGov countcreatedmonth
+	The endpoints counted against are the following: Create, ApplySPTemplate, ApplyTeamTemplate, Group`,
 	Run: func(cmd *cobra.Command, args []string) {
 	numbm, err :=	Get("CountEntriesMonth")
 	if err != nil {
