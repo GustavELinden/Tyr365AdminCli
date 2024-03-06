@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd/azure"
 	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd/graphCommands"
 	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd/teamGov"
 	"github.com/spf13/cobra"
@@ -53,6 +54,7 @@ func init() {
  	// rootCmd.AddCommand(interactiveCmd)
 	rootCmd.AddCommand(teamGov.TeamGovCmd)
 	rootCmd.AddCommand(graphCommands.GraphCmd)
+	rootCmd.AddCommand(azure.AzureCmd)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config.json)")
     rootCmd.PersistentFlags().BoolVarP(&Output, "output", "o", false, "Ensures that the selected command is output to the standard outout.")
 	// Cobra also supports local flags, which will only run

@@ -39,6 +39,7 @@ var queryCmd = &cobra.Command{
     --initiatedBy: User who initiated the request (e.g. "user1@tyrens.se"). If no user is provided, default user is "sposervice@tyrens.onmicrosoft.com".
     --status: Comma-separated statuses (e.g. "status1,status2"). Default status is "Succeeded". Available statuses are "Succeeded", "Error", "Queued", "Processing".
     --top: Limit the number of results. Default is 50. Max is 1000.
+    --templateID: Template ID to filter the requests -- Assuming there's a sensible default or 0 indicates "use default". This command should not be used with --print or --excel
         .`,
     Run: func(cmd *cobra.Command, args []string) {
         // Processing flags and constructing query parameters map
@@ -112,9 +113,9 @@ func init() {
     queryCmd.Flags().Bool("help", false, "Print help for the command")  
     queryCmd.Flags().Bool("excel", false, "Save the response to an Excel file")
     queryCmd.Flags().Bool("print", false, "Print the response as a table")
-    queryCmd.Flags().StringVarP(&jqQuery, "jq", "j", "", "jq query to filter the JSON output")
+    // queryCmd.Flags().StringVarP(&jqQuery, "jq", "j", "", "jq query to filter the JSON output")
     queryCmd.Flags().IntVarP(&templateID, "templateID", "T", 0, "Template ID to filter the requests")
-    TeamGovCmd.AddCommand(queryCmd) // Assuming TeamGovCmd is your root or sub-root command
+    TeamGovCmd.AddCommand(queryCmd) 
 }
 func renderRequests(requests []Request) {
 	// Reflect the slice to work with its elements
