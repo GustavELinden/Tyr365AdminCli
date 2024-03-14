@@ -1,0 +1,86 @@
+/*
+Copyright © 2024 NAME HERE <EMAIL ADDRESS>
+*/
+package teamGov
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/olekukonko/tablewriter"
+	"github.com/spf13/cobra"
+)
+type UnifiedGroup struct {
+	GroupId             string      `json:"groupId"`
+	DisplayName         string      `json:"displayName"`
+	Alias               string      `json:"alias"`
+	Description         string      `json:"description"`
+	CreatedDate         string      `json:"createdDate"`
+	SharePointUrl       string      `json:"sharePointUrl"`
+	Visibility          string      `json:"visibility"`
+	Team                string      `json:"team"`
+	Yammer              interface{} `json:"yammer"`
+	Label               interface{} `json:"label"`
+	ExpirationDateTime  interface{} `json:"expirationDateTime"`
+	ExchangeProperties  interface{} `json:"exchangeProperties"`
+}
+var searchString string
+// searchGroupsCmd represents the searchGroups command
+var searchGroupsCmd = &cobra.Command{
+	Use:   "searchGroups",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
+
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if cmd.Flags().Changed("searchText") {
+			body, err := Get("GetGroups", map[string]string{"searchText": searchString})
+			if err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+			groups, err := UnmarshalGroups(&body);
+			if err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+			RenderGroups(groups)
+		}
+
+	},
+}
+
+func init() {
+	searchGroupsCmd.Flags().StringVarP(&searchString, "searchText", "s", "", "searchText")
+	TeamGovCmd.AddCommand(searchGroupsCmd)
+
+}
+
+func RenderGroups(groups []UnifiedGroup){
+    table := tablewriter.NewWriter(os.Stdout)
+        table.SetHeader([]string{"GroupId", "DisplayName", "Alias", "Description", "CreatedDate", "SharePointUrl", "Visibility", "Team", "Yammer", "Label" }) // Customize the table header as needed
+
+        // Populate the table with data from the response
+        for _, req := range groups {
+            row := []string{
+              req.GroupId,
+							req.DisplayName,
+							req.Alias,
+							req.Description,
+							req.CreatedDate,
+							req.SharePointUrl,
+							req.Visibility,
+							req.Team,
+							fmt.Sprintf("%v", req.Yammer),
+							fmt.Sprintf("%v", req.Label),
+            
+            }
+            table.Append(row)
+        }
+
+        // Render the table
+        table.Render()
+    }

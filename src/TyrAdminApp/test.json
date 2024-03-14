@@ -1,226 +1,28 @@
 [
     {
-        "Id": 15326,
-        "groupId": "08a561c9-8027-408a-a995-405a0219ede1",
-        "teamName": "235012-AKT Compute platform-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "Forever"
+        "id": "53119ea7-abf9-4b9d-9145-917363279450",
+        "creationType": "",
+        "consentProvidedForMinor": "",
+        "displayName": "Gustav Lindén",
+        "employeeId": "",
+        "employeeHireDate": "",
+        "employeeLeaveDateTime": "",
+        "employeeType": "",
+        "faxNumber": "",
+        "mail": "gustavaz@tyrens.onmicrosoft.com",
+        "userPrincipalName": "gustavaz@tyrens.onmicrosoft.com"
     },
     {
-        "Id": 15634,
-        "groupId": "25df3cd4-17eb-48f1-9d8e-a39009b14f6e",
-        "teamName": "UK-TYR-Group-Sales-Invoices-UK-HM",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": ""
-    },
-    {
-        "Id": 15646,
-        "groupId": "ee859f1f-ba49-4566-9bf6-aa47c9e570b5",
-        "teamName": "923013 Flytt 2024 Uppsala-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 17085,
-        "groupId": "09d6bfe8-39e4-4414-a213-575e338bc441",
-        "teamName": "923033 Projekt Gävle-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 17086,
-        "groupId": "a133608e-5b60-497e-b4d8-3912fa426056",
-        "teamName": "923034  Flytt Västerås-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 17087,
-        "groupId": "c4fd44ef-a1a2-4213-8783-5cd83cc5e35a",
-        "teamName": "923036 Projekt Lund-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 17088,
-        "groupId": "a7c5e07d-841b-43bd-a0b8-68bff55c0023",
-        "teamName": "923035 VAK Linköping-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 17529,
-        "groupId": "9870fa61-caea-4d56-bbfb-0ffdd1495050",
-        "teamName": "34061 - Gilston Park Estate-UK-HM",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": ""
-    },
-    {
-        "Id": 17539,
-        "groupId": "bb37e4a4-a48f-441b-96b7-8338e9b78c91",
-        "teamName": "30615 - St Helens Town Mead-UK-HM",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": ""
-    },
-    {
-        "Id": 17688,
-        "groupId": "c21cc76a-cb31-4fbc-b145-963325fb0451",
-        "teamName": "277588K-Centralstaden DU2-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "Forever"
-    },
-    {
-        "Id": 17690,
-        "groupId": "bcd379ce-8fef-456c-9e77-e3fac4ba7ec2",
-        "teamName": "244166HIJ-FSK05 INTERIM-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "Forever"
-    },
-    {
-        "Id": 18349,
-        "groupId": "b8b989e4-16a5-461a-b2fb-10a6ccfb8b0e",
-        "teamName": "923005-4.157-LCA och LCCA för geoteknik – etapp 2-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 18653,
-        "groupId": "2672e8d0-19ce-4d33-a476-580327652551",
-        "teamName": "Gustav-Test-AKT-UK-AKT",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "Forever"
-    },
-    {
-        "Id": 18822,
-        "groupId": "faa52ad0-7af0-432f-ad94-ca2810d3e1f3",
-        "teamName": "922632-Personalstiftelsen-stugadministration-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 18823,
-        "groupId": "11bdb562-8abf-42af-83e2-90227b24d89f",
-        "teamName": "CBG LT-TYR-LT-KLP",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 18905,
-        "groupId": "e3c3b1b7-f2e2-4d3d-bd94-462e8faa0f60",
-        "teamName": "Test 3 - template 62 AKT-UK-AKT",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "Forever"
-    },
-    {
-        "Id": 18916,
-        "groupId": "ba01fa70-14af-43cc-b8b0-57b732506a45",
-        "teamName": "Test Maria med namnet Šablonų vystymas-LT-KLP",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 18918,
-        "groupId": "0418ad9f-8774-414e-b18e-b14c7c051bfe",
-        "teamName": "240111 - Test new project template-UK-AKT",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "Forever"
-    },
-    {
-        "Id": 18984,
-        "groupId": "acefe60c-7992-430e-8f83-6dd671be87e0",
-        "teamName": "UK-HM Life Sciences Champion Group-UK-HM",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 18986,
-        "groupId": "931e0ee9-fedb-4dc5-a0db-7c90a54176da",
-        "teamName": "UK-HM Commercial Offices Working Group-UK-HM",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 19161,
-        "groupId": "2e0e465c-f56f-4da6-8f62-1d8a44375a77",
-        "teamName": "329352C-Säby sim-och idrottshall-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "Forever"
-    },
-    {
-        "Id": 19192,
-        "groupId": "726a6c2b-4035-4f62-879d-b7a415ff2a59",
-        "teamName": "319152T-Haghultsleden-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "Forever"
-    },
-    {
-        "Id": 19341,
-        "groupId": "82c4e04d-34bc-4510-910b-d964f3de3b49",
-        "teamName": "UK-HM H14–FNS_SERBIA_HM-UK-HM",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 19567,
-        "groupId": "ec3466e4-f8a8-478c-b213-4cfa9647bc1f",
-        "teamName": "313442-MKB till DP 5621-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "Forever"
-    },
-    {
-        "Id": 19706,
-        "groupId": "17f4074b-79c2-4612-b85d-b9dacaa45667",
-        "teamName": "922174-Fordon Miljögeo  Grundvatten-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 19794,
-        "groupId": "5c14b2c5-432d-4974-a7b0-1f39f222d1ba",
-        "teamName": "Net Positive Places-UK-HM",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 19918,
-        "groupId": "a27c1752-edb8-4ea3-84ac-af04e3bdfb77",
-        "teamName": "923074-Nytt kontor Östersund-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
-    },
-    {
-        "Id": 20128,
-        "groupId": "8f757c2e-2bd3-4376-99c2-c17b060f6a8d",
-        "teamName": "923980-Test Copilot-SE-TYR",
-        "status": "New",
-        "origin": "GovPortal",
-        "retention": "None"
+        "id": "fe429714-d600-4948-a412-b9983986356e",
+        "creationType": "",
+        "consentProvidedForMinor": "",
+        "displayName": "Gustav Lindén",
+        "employeeId": "",
+        "employeeHireDate": "",
+        "employeeLeaveDateTime": "",
+        "employeeType": "",
+        "faxNumber": "",
+        "mail": "gustav.linden@tyrens.se",
+        "userPrincipalName": "gustav.linden@tyrens.se"
     }
 ]

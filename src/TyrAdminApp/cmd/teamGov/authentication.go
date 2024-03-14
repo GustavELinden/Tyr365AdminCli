@@ -91,21 +91,7 @@ func AuthGovernanceApi() (string, error){
 func RetrieveAuthToken() (string, error) {
 		return TokenCache, nil
 }
-// ManualAuthenticate handles the manual initiation of the authentication process
-// func ManualAuthenticate() error {
-//     // Authenticate and update the token cache
-//     newToken, err := AuthGovernanceApi() // Adjust this function to return the expiry time and error
-// 	  fmt.Println(newToken)
-//     if err != nil {
-//         return err // Return the error to be handled or logged
-//     }
-   
-//     // Update tokenCache with the new token and expiry time
-//    TokenCache = newToken
-   
-//     fmt.Println(TokenCache)
-// 		return nil
-// }
+
 func PrintToken() {
 	fmt.Println(TokenCache)
 }

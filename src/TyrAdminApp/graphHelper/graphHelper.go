@@ -80,18 +80,20 @@ func (g *GraphHelper) GetGroupById(groupId string) (models.Groupable, error) {
 	 return group, nil
 }
 
-func (g *GraphHelper) GetUsers(selectProperties []string, amount *int32) (models.UserCollectionResponseable, error) {
+func (g *GraphHelper) GetUsers(selectProperties []string, amount *int32,filter string ) (models.UserCollectionResponseable, error) {
     var topValue int32
     if amount == nil {
         topValue = 25 // Default value if amount is not provided
     } else {
         topValue = *amount
     }
-
+ 
     query := users.UsersRequestBuilderGetQueryParameters{
         Select:  selectProperties,
         Top:     &topValue,
-        Orderby: []string{"displayName"},
+        // Orderby: []string{"displayName"},
+        Filter:  &filter,
+      
     }
 
     return g.appClient.Users().

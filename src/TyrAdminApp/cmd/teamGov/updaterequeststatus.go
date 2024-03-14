@@ -29,7 +29,6 @@ var updaterequeststatusCmd = &cobra.Command{
 
 func init() {
     updaterequeststatusCmd.Flags().Int32VarP(&requestId, "requestId", "r", 0, "The id of the request to update the status of")
-    // Corrected shorthand for "status" flag to "s"
     updaterequeststatusCmd.Flags().StringVarP(&status, "status", "s", "", "The new status of the request")
     TeamGovCmd.AddCommand(updaterequeststatusCmd)
 }

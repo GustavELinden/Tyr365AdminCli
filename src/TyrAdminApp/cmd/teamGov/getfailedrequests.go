@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	saveToFile "github.com/GustavELinden/TyrAdminCli/365Admin/SaveToFile"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -26,6 +27,28 @@ requests, errs := UnmarshalRequests(&response)
 if errs !=nil {
 	fmt.Println("Error:", errs)
 	return
+}
+
+if cmd.Flag("excel").Changed {
+	var fileName string
+	fmt.Println("Name your new excel file:")
+	fmt.Scanln(&fileName)
+	saveToFile.SaveToExcel(requests, fileName)
+}
+if cmd.Flag("print").Changed {
+	renderRequests(requests)
+}
+if cmd.Flag("json").Changed {
+	var fileName string
+	fmt.Println("Enter a name for the JSON file (without extension):")
+	fmt.Scanln(&fileName)
+
+	err := saveToFile.SaveDataToJSONFile(requests, fileName+".json")
+	if err != nil {
+		fmt.Printf("Error saving data to JSON file: %s\n", err)
+		return
+	}
+	fmt.Println("Data successfully saved to JSON file:", fileName+".json")
 }
 table := tablewriter.NewWriter(os.Stdout)
         table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Endpoint", "CallerID", "Status", "ProvisioningStep", "Message", "InitiatedBy", "Modified", "RetryCount", "QueuePriority"}) // Customize the table header as needed
@@ -59,6 +82,9 @@ table := tablewriter.NewWriter(os.Stdout)
 	
 func init() {
 	getfailedrequestsCmd.Flags().StringVarP(&callerID, "callerID", "c", "", "The callerID to filter the failed requests")
+    getfailedrequestsCmd.Flags().Bool("print", false, "Print the response as a table")
+    getfailedrequestsCmd.Flags().Bool("excel", false, "Save the response to an Excel file")
+    getfailedrequestsCmd.Flags().Bool("json", false, "Save the response to a JSON file")
 	TeamGovCmd.AddCommand(getfailedrequestsCmd)
 
 }

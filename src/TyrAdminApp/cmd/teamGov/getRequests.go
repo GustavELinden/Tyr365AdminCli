@@ -363,6 +363,21 @@ func UnmarshalRequests(body *[]byte) ([]Request, error) {
 
     return nil, fmt.Errorf("error unmarshalling to Request or []Request: %w", err)
 }
+func UnmarshalGroups(body *[]byte) ([]UnifiedGroup, error) {
+    var groups []UnifiedGroup
+    err := json.Unmarshal(*body, &groups)
+    if err == nil {
+        return groups, nil
+    }
+
+    var group UnifiedGroup
+    err = json.Unmarshal(*body, &group)
+    if err == nil {
+        return []UnifiedGroup{group}, nil
+    }
+
+    return nil, fmt.Errorf("error unmarshalling to UnifiedGroup or []UnifiedGroup: %w", err)
+}
 func UnmarshalManagedTeams(body *[]byte) ([]ManagedTeam, error) {
     var managedTeam []ManagedTeam
     err := json.Unmarshal(*body, &managedTeam)

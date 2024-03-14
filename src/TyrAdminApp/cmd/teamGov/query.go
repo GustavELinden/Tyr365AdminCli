@@ -13,7 +13,7 @@ import (
 
 // Assuming these variables are declared at the package level to store flag values
 var (
-    jqQuery string
+
     endpoint       string
     created        string
     createdEnd     string
@@ -89,6 +89,18 @@ var queryCmd = &cobra.Command{
        if cmd.Flag("excel").Changed {
         savedToFile(&requests)
     } 
+    if cmd.Flag("json").Changed {
+    var fileName string
+    fmt.Println("Enter a name for the JSON file (without extension):")
+    fmt.Scanln(&fileName)
+
+    err := saveToFile.SaveDataToJSONFile(&requests, fileName+".json")
+    if err != nil {
+        fmt.Printf("Error saving data to JSON file: %s\n", err)
+        return
+    }
+    fmt.Println("Data successfully saved to JSON file:", fileName+".json")
+}
     if cmd.Flag("print").Changed {
         renderRequests(requests)
     }
@@ -112,6 +124,7 @@ func init() {
     queryCmd.Flags().IntVarP(&top, "top", "t", 0, "Limit the number of results")
     queryCmd.Flags().Bool("help", false, "Print help for the command")  
     queryCmd.Flags().Bool("excel", false, "Save the response to an Excel file")
+    queryCmd.Flags().Bool("json", false, "Save the response to a JSON file")
     queryCmd.Flags().Bool("print", false, "Print the response as a table")
     // queryCmd.Flags().StringVarP(&jqQuery, "jq", "j", "", "jq query to filter the JSON output")
     queryCmd.Flags().IntVarP(&templateID, "templateID", "T", 0, "Template ID to filter the requests")

@@ -4,10 +4,10 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package graphCommands
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
+	saveToFile "github.com/GustavELinden/TyrAdminCli/365Admin/SaveToFile"
 	graphhelper "github.com/GustavELinden/TyrAdminCli/365Admin/graphHelper"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/spf13/cobra"
@@ -15,6 +15,7 @@ import (
 
 var propertiesFlag []string
 var amountFlag int32
+var filterFlag string
 
 var getusersCmd = &cobra.Command{
 	Use:   "getusers",
@@ -22,14 +23,26 @@ var getusersCmd = &cobra.Command{
 	Long: `Retrieves a list of users from Microsoft Graph, with customizable properties via the command line.`,
 	Run: func(cmd *cobra.Command, args []string) {
     
- 		users, err := graphHelper.GetUsers(propertiesFlag, &amountFlag)
+ 		users, err := graphHelper.GetUsers(propertiesFlag, &amountFlag,filterFlag)
 		if err != nil {
 			fmt.Printf("Error getting users: %v\n", err)
 			return
 		}
-	userse , err := jsonifyUserResponse(users)
-  da, err := json.Marshal(userse)
- fmt.Println(string(da))
+	userse , err := JsonifyUserResponse(users)
+  
+
+  if cmd.Flag("json").Changed {
+    var fileName string
+    fmt.Println("Enter a name for the JSON file (without extension):")
+    fmt.Scanln(&fileName)
+
+    err := saveToFile.SaveDataToJSONFile(userse, fileName+".json")
+    if err != nil {
+        fmt.Printf("Error saving data to JSON file: %s\n", err)
+        return
+    }
+    fmt.Println("Data successfully saved to JSON file:", fileName+".json")
+}
 
  },
 }
@@ -38,6 +51,8 @@ func init() {
 	GraphCmd.AddCommand(getusersCmd)
 	getusersCmd.Flags().StringSliceVarP(&propertiesFlag, "properties", "p", []string{"displayName", "id", "mail"}, "Properties to select (comma-separated)")
 	getusersCmd.Flags().Int32VarP(&amountFlag, "amount", "a", 25, "Amount of users to retrieve")
+    getusersCmd.Flags().StringVarP(&filterFlag, "filter", "f", "", "Filter the users by a specific property")
+    getusersCmd.Flags().BoolP("json", "j", false, "Save the output to a JSON file")
 }
 
 func safeGetString(s *string) string {
@@ -70,7 +85,7 @@ func stringPointer(s string) *string {
 }
 
 
-func jsonifyUserResponse(users models.UserCollectionResponseable) ([]graphhelper.User, error) {
+func JsonifyUserResponse(users models.UserCollectionResponseable) ([]graphhelper.User, error) {
 	var mappedUsers []graphhelper.User
 
 	for _, u := range users.GetValue() {

@@ -99,3 +99,11 @@ func ReadDataFromJSONFile(filename string, data interface{}) error {
 	// fmt.Println(string(prettyJSON))
 	return nil
 }
+
+func DeleteFile(filename string) error {
+	err := os.Remove(filename)
+	if err != nil {
+		return fmt.Errorf("error deleting file: %w", err)
+	}
+	return nil
+}
