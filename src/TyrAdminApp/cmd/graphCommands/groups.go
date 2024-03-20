@@ -4,9 +4,28 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package graphCommands
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 )
-
+type Group struct {
+	ID                        *string    `json:"id,omitempty"`
+	DeletedDateTime           *time.Time `json:"deletedDateTime,omitempty"`
+	CreatedDateTime           *time.Time `json:"createdDateTime,omitempty"`
+	CreatedByAppId            *string    `json:"createdByAppId,omitempty"`
+	OrganizationId            *string    `json:"organizationId,omitempty"`
+	Description               *string    `json:"description,omitempty"`
+	DisplayName               *string    `json:"displayName,omitempty"`
+	GroupTypes                []*string  `json:"groupTypes,omitempty"`
+	InfoCatalogs              []*string  `json:"infoCatalogs,omitempty"`
+	Mail                      *string    `json:"mail,omitempty"`
+	MailEnabled               *bool      `json:"mailEnabled,omitempty"`
+	MailNickname              *string    `json:"mailNickname,omitempty"`
+	ProxyAddresses            []*string  `json:"proxyAddresses,omitempty"`
+	RenewedDateTime           *time.Time `json:"renewedDateTime,omitempty"`
+	Visibility                *string    `json:"visibility,omitempty"`
+	
+}
 // groupsCmd represents the groups command
 var GroupsCmd = &cobra.Command{
 	Use:   "groups",

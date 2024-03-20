@@ -111,7 +111,7 @@ func renderManagedTeams(managed *[]ManagedTeam) {
 	// Reflect the slice to work with its elements
 
 	table := tablewriter.NewWriter(os.Stdout)
-        table.SetHeader([]string{"Id", "GroupId", "TeamName", "Status","Origin","Retention"}) // Customize the table header as needed
+        table.SetHeader([]string{"GroupId", "TeamName", "Status","Origin","Retention"}) // Customize the table header as needed
 
         // Populate the table with data from the response
         for _, req := range *managed {

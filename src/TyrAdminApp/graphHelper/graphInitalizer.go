@@ -11,13 +11,14 @@ import (
 
 	// "github.com/microsoftgraph/msgraph-sdk-go/models"
 	// "github.com/microsoftgraph/msgraph-sdk-go/users"
-
 	viperConfig "github.com/GustavELinden/TyrAdminCli/365Admin/config"
+	graphbeta "github.com/microsoftgraph/msgraph-beta-sdk-go"
 )
 
 type GraphHelper struct {
     clientSecretCredential *azidentity.ClientSecretCredential
     appClient              *msgraphsdk.GraphServiceClient
+    betaClient             *graphbeta.GraphServiceClient
 }
 
 func NewGraphHelper() *GraphHelper {
@@ -59,7 +60,9 @@ func (g *GraphHelper) InitializeGraphForAppAuth() error {
 
     // Create a Graph client using request adapter
     client := msgraphsdk.NewGraphServiceClient(adapter)
+    betaClient := graphbeta.NewGraphServiceClient(adapter)
     g.appClient = client
+    g.betaClient = betaClient
 
     return nil
 }
@@ -77,7 +80,6 @@ func (g *GraphHelper) GetAppToken() (*string, error) {
 
     return &token.Token, nil
 }
-
 
 
 // func listUsers(graphHelper *graphhelper.GraphHelper) {

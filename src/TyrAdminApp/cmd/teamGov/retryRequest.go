@@ -15,7 +15,7 @@ var retryRequestCmd = &cobra.Command{
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
-		body, err := Get("RetryRequest", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
+		body, err := Post("RetryRequest", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
 		if err != nil {
 			fmt.Println(err)
 		}

@@ -5,6 +5,7 @@ import (
 
 	// users  "github.com/microsoftgraph/msgraph-sdk-go/users"
 	viperConfig "github.com/GustavELinden/TyrAdminCli/365Admin/config"
+	bmodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	models "github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/users"
 	//other-imports
@@ -80,6 +81,15 @@ func (g *GraphHelper) GetGroupById(groupId string) (models.Groupable, error) {
 	 return group, nil
 }
 
+func (g *GraphHelper) GetDeletedGroups()([]bmodels.Groupable, error){
+    graphGroups, err := g.betaClient.Directory().DeletedItems().GraphGroup().Get(context.Background(), nil)
+    if err != nil {
+        return nil, err
+    }
+    groups := graphGroups.GetValue()
+    return groups, nil
+}
+
 func (g *GraphHelper) GetUsers(selectProperties []string, amount *int32,filter string ) (models.UserCollectionResponseable, error) {
     var topValue int32
     if amount == nil {
@@ -104,7 +114,7 @@ func (g *GraphHelper) GetUsers(selectProperties []string, amount *int32,filter s
 
 func (g *GraphHelper) CreateTask(taskTitle string) (models.PlannerTaskable, error) {
 	// Initialize a new PlannerTask object
-    	viper, err := viperConfig.InitViper("config.json")
+    viper, err := viperConfig.InitViper("config.json")
 	requestBody := models.NewPlannerTask()
 
 	// Retrieve planId and bucketId from viper configuration
