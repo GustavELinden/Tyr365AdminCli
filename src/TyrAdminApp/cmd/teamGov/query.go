@@ -160,28 +160,32 @@ func renderRequests(requests []Request) {
         table.Render()
     }
 
-
 func RunGORutine(requests []Request, templateID int) {
-   var wg sync.WaitGroup
-    requestsChan := make(chan Request)
-    resultsChan := make(chan Request) // Channel to collect matching requests
+    // Use goroutines to process requests concurrently
+    // WaitGroup is like an advnaced clock that waits for all goroutines to finish
+    var wg sync.WaitGroup
+    // Assuming a buffer size, which might be tuned based on your application's requirements
+    bufferSize := 100
+
+    requestsChan := make(chan Request, bufferSize) // Buffered channel for requests
+    resultsChan := make(chan Request, bufferSize) // Buffered channel for results
 
     // Start worker goroutines
-    numWorkers := 20
+    numWorkers := 20 // This might be adjusted based on your system's capabilities
     for i := 0; i < numWorkers; i++ {
         wg.Add(1)
-        go worker(&wg,templateID , requestsChan, resultsChan)
+        go worker(&wg, templateID, requestsChan, resultsChan)
     }
 
     // Collector goroutine to gather results
     go func() {
         wg.Wait()
-        close(resultsChan) // Close results channel once all workers are done
+        close(resultsChan) // Safely close results channel once all workers are done
     }()
 
     // Send requests to the workers
     for _, req := range requests {
-        requestsChan <- req
+        requestsChan <- req // This is safe as long as the total number of requests doesn't exceed the channel's capacity significantly
     }
     close(requestsChan) // Signal workers that no more requests are coming
 
@@ -194,7 +198,41 @@ func RunGORutine(requests []Request, templateID int) {
     renderRequests(matchedRequests)
 }
 
+// func RunGORutine(requests []Request, templateID int) {
+//    var wg sync.WaitGroup
+//     requestsChan := make(chan Request)
+//     resultsChan := make(chan Request) // Channel to collect matching requests
+
+//     // Start worker goroutines
+//     numWorkers := 5
+//     for i := 0; i < numWorkers; i++ {
+//         wg.Add(1)
+//         go worker(&wg,templateID , requestsChan, resultsChan)
+//     }
+
+//     // Collector goroutine to gather results
+//     go func() {
+//         wg.Wait()
+//         close(resultsChan) // Close results channel once all workers are done
+//     }()
+
+//     // Send requests to the workers
+//     for _, req := range requests {
+//         requestsChan <- req
+//     }
+//     close(requestsChan) // Signal workers that no more requests are coming
+
+//     // Collect and process matching requests
+//     var matchedRequests []Request
+//     for req := range resultsChan {
+//         matchedRequests = append(matchedRequests, req)
+//     }
+
+//     renderRequests(matchedRequests)
+// }
+
 func worker(wg *sync.WaitGroup, templateID int ,requestsChan <-chan Request, resultsChan chan<- Request) {
+
     defer wg.Done()
     for req := range requestsChan {
         var params Parameters

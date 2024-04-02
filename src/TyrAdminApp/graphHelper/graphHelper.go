@@ -133,3 +133,27 @@ func (g *GraphHelper) CreateTask(taskTitle string) (models.PlannerTaskable, erro
 
 	return result, nil
 }
+
+func (g *GraphHelper) GetTeamById(teamId string) (models.Teamable, error) {
+  team, nil := g.appClient.Teams().ByTeamId(teamId).Get(context.Background(), nil)
+  return team, nil
+}
+
+func (g *GraphHelper) GetAllChannels(teamId string) (models.ChannelCollectionResponseable, error) {
+  channels, nil := g.appClient.Teams().ByTeamId(teamId).AllChannels().Get(context.Background(), nil)
+  return channels, nil
+}
+
+func (g *GraphHelper) GetChannelById(teamId string, channelId string) (models.Channelable, error) {
+    channel, nil := g.appClient.Teams().ByTeamId(teamId).Channels().ByChannelId(channelId).Get(context.Background(), nil)
+    return channel, nil
+    }
+    
+    func (g *GraphHelper) EnsureFilesFolder(teamId string, channelId string) (models.DriveItemable, error) {
+    drive, nil := g.appClient.Teams().ByTeamId(teamId).Channels().ByChannelId(channelId).FilesFolder().Get(context.Background(), nil)
+    return drive, nil
+    }
+        func (g *GraphHelper) GetTabs(teamId string, channelId string) (models.TeamsTabCollectionResponseable, error) {
+    teamTabs, nil := g.appClient.Teams().ByTeamId(teamId).Channels().ByChannelId(channelId).Tabs().Get(context.Background(), nil)
+    return teamTabs, nil
+    }

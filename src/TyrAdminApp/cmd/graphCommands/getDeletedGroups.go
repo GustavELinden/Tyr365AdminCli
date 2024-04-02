@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd/teamGov"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 
@@ -56,15 +57,18 @@ to quickly create a Cobra application.`,
         return
     }
 
-
+// we add flag to print which team has which Origin and Retention
 for _, team := range managedTeams {
-    if team.Origin == "GovPortal" || team.Origin == "Tyra" && team.Retention == "Forever"{
+    if team.Origin == "GovPortal" && team.Retention == "Forever"{
+        fmt.Println(team.TeamName + " is from " + team.Origin + " and needs to be discussed")
+    }
+     if team.Origin == "Tyra" && team.Retention == "Forever"{
         fmt.Println(team.TeamName + " is from " + team.Origin + " and needs to be restored")
     } else {
         fmt.Println(team.TeamName + " is from " + team.Origin + " and does not need to be restored")
     }
 }
-
+restoreSelectedTeams(managedTeams)
 
 },
 }
@@ -73,14 +77,40 @@ for _, team := range managedTeams {
 func init() {
 	GraphCmd.AddCommand(getDeletedGroupsCmd)
 
-	// Here you will define your flags and configuration settings.
+}
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// getDeletedGroupsCmd.PersistentFlags().String("foo", "", "A help for foo")
+func restoreSelectedTeams(managedTeams []teamGov.ManagedTeam) {
+    var options []string
+    teamNameToGroupId := make(map[string]string) // Map to associate team names with their GroupIds
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// getDeletedGroupsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+    // Populate the options slice and the map
+    for _, team := range managedTeams {
+        option := fmt.Sprintf("Option %s", team.TeamName)
+        options = append(options, option)
+        teamNameToGroupId[option] = team.GroupId // Use the formatted option as key for consistency
+    }
+
+    // Create a new interactive multiselect printer with the options
+    printer := pterm.DefaultInteractiveMultiselect.
+        WithOptions(options).
+        WithFilter(false).
+        WithCheckmark(&pterm.Checkmark{Checked: pterm.Green("+"), Unchecked: pterm.Red("-")})
+
+    // Show the interactive multiselect and get the selected options
+    selectedOptions, _ := printer.Show()
+
+    // Initialize a slice for selected GroupIds based on selected options
+    var selectedGroupIds []string
+    for _, selectedOption := range selectedOptions {
+        if groupId, exists := teamNameToGroupId[selectedOption]; exists {
+            selectedGroupIds = append(selectedGroupIds, groupId)
+        }
+    }
+
+    // Now selectedGroupIds contains the GroupIds of the teams selected by the user
+    // You can proceed with the restoration process using these GroupIds
+    pterm.Info.Printfln("Selected GroupIds: %s", pterm.Green(selectedGroupIds))
+
+    // Add your logic here to restore teams based on selected GroupIds
 }
 

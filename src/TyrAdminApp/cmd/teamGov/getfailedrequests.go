@@ -2,10 +2,9 @@ package teamGov
 
 import (
 	"fmt"
-	"os"
 
 	saveToFile "github.com/GustavELinden/TyrAdminCli/365Admin/SaveToFile"
-	"github.com/olekukonko/tablewriter"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 var callerID string
@@ -50,32 +49,10 @@ if cmd.Flag("json").Changed {
 	}
 	fmt.Println("Data successfully saved to JSON file:", fileName+".json")
 }
-table := tablewriter.NewWriter(os.Stdout)
-        table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Endpoint", "CallerID", "Status", "ProvisioningStep", "Message", "InitiatedBy", "Modified", "RetryCount", "QueuePriority"}) // Customize the table header as needed
+if cmd.Flag("interactive").Changed {
+	requeueSelectedTeams(requests)
+}
 
-        // Populate the table with data from the response
-        for _, req := range requests {
-            row := []string{
-                fmt.Sprintf("%d", req.ID),
-                req.Created,
-                req.GroupID,
-                req.TeamName,
-                req.Endpoint,
-                req.CallerID,
-                req.Status,
-                req.ProvisioningStep,
-                req.Message,
-                req.InitiatedBy,
-                req.Modified,
-                fmt.Sprintf("%v", req.RetryCount),
-                fmt.Sprintf("%d", req.QueuePriority),
-            
-            }
-            table.Append(row)
-        }
-
-        // Render the table
-        table.Render()
     },
 
 	}
@@ -85,6 +62,47 @@ func init() {
     getfailedrequestsCmd.Flags().Bool("print", false, "Print the response as a table")
     getfailedrequestsCmd.Flags().Bool("excel", false, "Save the response to an Excel file")
     getfailedrequestsCmd.Flags().Bool("json", false, "Save the response to a JSON file")
+		getfailedrequestsCmd.Flags().Bool("interactive", false, "interactive mode")
 	TeamGovCmd.AddCommand(getfailedrequestsCmd)
 
+}
+
+func requeueSelectedTeams(requests []Request) {
+    var options []string
+    teamNameToGroupId := make(map[string]int) // Map to associate team names with their GroupIds
+
+    // Populate the options slice and the map
+    for _, request := range requests {
+        option := fmt.Sprintf("Option %s", request.TeamName)
+        options = append(options, option)
+        teamNameToGroupId[option] = request.ID // Use the formatted option as key for consistency
+    }
+
+    printer := pterm.DefaultInteractiveMultiselect.
+        WithOptions(options).
+        WithFilter(false).
+        WithCheckmark(&pterm.Checkmark{Checked: pterm.Green("+"), Unchecked: pterm.Red("-")})
+
+    selectedOptions, _ := printer.Show()
+
+
+    var selectedGroupIds []int
+    for _, selectedOption := range selectedOptions {
+        if groupId, exists := teamNameToGroupId[selectedOption]; exists {
+            selectedGroupIds = append(selectedGroupIds, groupId)
+        }
+    }
+
+    pterm.Info.Printfln("Selected GroupIds: %s", pterm.Green(selectedGroupIds))
+
+		if len(selectedGroupIds) > 0 {
+			for _, id := range selectedGroupIds {
+					_, err := Post("RetryRequest", map[string]string{"requestId": fmt.Sprintf("%d", id)})
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		fmt.Println("Request with ID", id, "requeued successfully")
+			}
+		}
 }

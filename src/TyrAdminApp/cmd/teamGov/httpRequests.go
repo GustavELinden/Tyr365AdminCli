@@ -148,7 +148,6 @@ func GetQuery(targetEndpoint string, queryParams map[string]string) ([]byte, err
     if len(query) > 0 {
         apiURL += "?" + query.Encode()
     }
-    fmt.Println(apiURL);
     // Create the HTTP GET request.
     req, err := http.NewRequest("GET", apiURL, nil)
     if err != nil {
