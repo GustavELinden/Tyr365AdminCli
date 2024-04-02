@@ -16,71 +16,69 @@ import (
 )
 
 type GraphHelper struct {
-    clientSecretCredential *azidentity.ClientSecretCredential
-    appClient              *msgraphsdk.GraphServiceClient
-    betaClient             *graphbeta.GraphServiceClient
+	clientSecretCredential *azidentity.ClientSecretCredential
+	appClient              *msgraphsdk.GraphServiceClient
+	betaClient             *graphbeta.GraphServiceClient
 }
 
 func NewGraphHelper() *GraphHelper {
-    g := &GraphHelper{}
-    return g
+	g := &GraphHelper{}
+	return g
 }
 
 func (g *GraphHelper) InitializeGraphForAppAuth() error {
-  	viper, err := viperConfig.InitViper("config.json")
-    if err != nil {
-        fmt.Printf("Error reading config file: %v\n", err)
-    
-    }
+	viper, err := viperConfig.InitViper("config.json")
+	if err != nil {
+		fmt.Printf("Error reading config file: %v\n", err)
 
-    clientId := viper.GetString("M365managementAppClientId")
-    tenantId := viper.GetString("O365TenantName")
-    clientSecret := viper.GetString("M365ManagementAppClientSecret")
-  
-    credential, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, nil)
-    if err != nil {
-        return err
-    }
+	}
 
-    g.clientSecretCredential = credential
+	clientId := viper.GetString("M365managementAppClientId")
+	tenantId := viper.GetString("O365TenantName")
+	clientSecret := viper.GetString("M365ManagementAppClientSecret")
 
-    // Create an auth provider using the credential
-    authProvider, err := auth.NewAzureIdentityAuthenticationProviderWithScopes(g.clientSecretCredential, []string{
-        "https://graph.microsoft.com/.default",
-    })
-    if err != nil {
-        return err
-    }
+	credential, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, nil)
+	if err != nil {
+		return err
+	}
 
-    // Create a request adapter using the auth provider
-    adapter, err := msgraphsdk.NewGraphRequestAdapter(authProvider)
-    if err != nil {
-        return err
-    }
+	g.clientSecretCredential = credential
 
-    // Create a Graph client using request adapter
-    client := msgraphsdk.NewGraphServiceClient(adapter)
-    betaClient := graphbeta.NewGraphServiceClient(adapter)
-    g.appClient = client
-    g.betaClient = betaClient
+	// Create an auth provider using the credential
+	authProvider, err := auth.NewAzureIdentityAuthenticationProviderWithScopes(g.clientSecretCredential, []string{
+		"https://graph.microsoft.com/.default",
+	})
+	if err != nil {
+		return err
+	}
 
-    return nil
+	// Create a request adapter using the auth provider
+	adapter, err := msgraphsdk.NewGraphRequestAdapter(authProvider)
+	if err != nil {
+		return err
+	}
+
+	// Create a Graph client using request adapter
+	client := msgraphsdk.NewGraphServiceClient(adapter)
+	betaClient := graphbeta.NewGraphServiceClient(adapter)
+	g.appClient = client
+	g.betaClient = betaClient
+
+	return nil
 }
-
 
 func (g *GraphHelper) GetAppToken() (*string, error) {
-    token, err := g.clientSecretCredential.GetToken(context.Background(), policy.TokenRequestOptions{
-        Scopes: []string{
-            "https://graph.microsoft.com/.default",
-        },
-    })
-    if err != nil {
-        return nil, err
-    }
+	token, err := g.clientSecretCredential.GetToken(context.Background(), policy.TokenRequestOptions{
+		Scopes: []string{
+			"https://graph.microsoft.com/.default",
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
 
-    return &token.Token, nil
+	return &token.Token, nil
 }
-
 
 // func listUsers(graphHelper *graphhelper.GraphHelper) {
 //     users, err := *graphHelper.GetUsers()

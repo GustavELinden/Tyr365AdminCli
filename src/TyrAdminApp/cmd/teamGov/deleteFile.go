@@ -21,7 +21,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		
+
 		//if flag --file is used, delete the file
 		if cmd.Flag("file").Changed {
 			err := saveToFile.DeleteFile(fileName)
@@ -36,6 +36,6 @@ to quickly create a Cobra application.`,
 
 func init() {
 	TeamGovCmd.AddCommand(deleteFileCmd)
-  deleteFileCmd.Flags().StringVarP(&fileName, "file", "f", "", "The name of the file you want to delete")
+	deleteFileCmd.Flags().StringVarP(&fileName, "file", "f", "", "The name of the file you want to delete")
 
 }

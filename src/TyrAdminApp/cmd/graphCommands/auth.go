@@ -10,7 +10,9 @@ import (
 	graphhelper "github.com/GustavELinden/TyrAdminCli/365Admin/graphHelper"
 	"github.com/spf13/cobra"
 )
+
 var graphHelper *graphhelper.GraphHelper
+
 // authCmd represents the auth command
 var authCmd = &cobra.Command{
 	Use:   "auth",
@@ -29,24 +31,24 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-		graphHelper = graphhelper.NewGraphHelper()
+	graphHelper = graphhelper.NewGraphHelper()
 
-    initializeGraph(graphHelper)
+	initializeGraph(graphHelper)
 	GraphCmd.AddCommand(authCmd)
 
 }
 func initializeGraph(graphHelper *graphhelper.GraphHelper) {
-    err := graphHelper.InitializeGraphForAppAuth()
-    if err != nil {
-        log.Panicf("Error initializing Graph for app auth: %v\n", err)
-    }
+	err := graphHelper.InitializeGraphForAppAuth()
+	if err != nil {
+		log.Panicf("Error initializing Graph for app auth: %v\n", err)
+	}
 }
 func displayAccessToken(graphHelper *graphhelper.GraphHelper) {
-    token, err := graphHelper.GetAppToken()
-    if err != nil {
-        log.Panicf("Error getting user token: %v\n", err)
-    }
+	token, err := graphHelper.GetAppToken()
+	if err != nil {
+		log.Panicf("Error getting user token: %v\n", err)
+	}
 
-    fmt.Printf("App-only token: %s", *token)
-    fmt.Println()
+	fmt.Printf("App-only token: %s", *token)
+	fmt.Println()
 }

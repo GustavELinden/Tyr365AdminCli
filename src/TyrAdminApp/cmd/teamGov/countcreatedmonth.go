@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
 var Createdmonth int32
 
 var countcreatedmonthCmd = &cobra.Command{
@@ -17,17 +18,17 @@ var countcreatedmonthCmd = &cobra.Command{
 	Long: `Returns the number of requests created in the current month. For example: 365Admin teamGov countcreatedmonth
 	The endpoints counted against are the following: Create, ApplySPTemplate, ApplyTeamTemplate, Group`,
 	Run: func(cmd *cobra.Command, args []string) {
-	numbm, err :=	Get("CountEntriesMonth")
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-   errAtParsing := json.Unmarshal(numbm, &Createdmonth)
-	 if errAtParsing != nil {
-		fmt.Println("Error:", errAtParsing)
-		return
-	 }
-   fmt.Println(Createdmonth)
+		numbm, err := Get("CountEntriesMonth")
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		errAtParsing := json.Unmarshal(numbm, &Createdmonth)
+		if errAtParsing != nil {
+			fmt.Println("Error:", errAtParsing)
+			return
+		}
+		fmt.Println(Createdmonth)
 	},
 }
 

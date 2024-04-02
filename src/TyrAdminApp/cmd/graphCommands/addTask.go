@@ -8,7 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
 var title string
+
 // addTaskCmd represents the addTask command
 var addTaskCmd = &cobra.Command{
 	Use:   "addTask",
@@ -20,21 +22,21 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-   if cmd.Flag("title").Changed {
-		response, err := graphHelper.CreateTask("Test")
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
+		if cmd.Flag("title").Changed {
+			response, err := graphHelper.CreateTask("Test")
+			if err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+			fmt.Println("Task created successfully")
+			fmt.Println(response)
 		}
-		fmt.Println("Task created successfully")
-		fmt.Println(response)
-	 }
 	},
 }
 
 func init() {
 	GraphCmd.AddCommand(addTaskCmd)
-  addTaskCmd.Flags().StringVarP(&title, "title", "t", "", "The title of the task")
+	addTaskCmd.Flags().StringVarP(&title, "title", "t", "", "The title of the task")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

@@ -12,11 +12,10 @@ import (
 )
 
 type TokenCached struct {
-    Token     string
+	Token string
 }
+
 var TokenCache string
-
-
 
 func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) {
 	// Encode the body values into a URL-encoded format
@@ -41,12 +40,12 @@ func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) 
 	return resp, nil
 }
 
-func AuthGovernanceApi() (string, error){
+func AuthGovernanceApi() (string, error) {
 	viper, err := viperConfig.InitViper("config.json")
- if err != nil {
-	 fmt.Printf("Error initializing viper: %v\n", err)
-	 return "", errors.New("error initializing viper")
-	  }
+	if err != nil {
+		fmt.Printf("Error initializing viper: %v\n", err)
+		return "", errors.New("error initializing viper")
+	}
 	authAdress := "https://login.microsoftonline.com/a2728528-eff8-409c-a379-7d900c45d9ba/oauth2/token"
 
 	bodyValues := url.Values{}
@@ -73,23 +72,22 @@ func AuthGovernanceApi() (string, error){
 	var tokenResponse map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
 		fmt.Printf("Error decoding response body: %v\n", err)
-		return "", 		errors.New("error decoding response body")
+		return "", errors.New("error decoding response body")
 	}
 
 	// Extract the access token
 	accessToken, ok := tokenResponse["access_token"].(string)
 	if !ok {
 		fmt.Println("Access token not found in response")
-		return "", 		errors.New("access token not found in response")
+		return "", errors.New("access token not found in response")
 	}
 	// Print the access token
 
-  return accessToken, nil
+	return accessToken, nil
 }
 
-
 func RetrieveAuthToken() (string, error) {
-		return TokenCache, nil
+	return TokenCache, nil
 }
 
 func PrintToken() {

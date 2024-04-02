@@ -19,23 +19,22 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
- 
-	Run: func(cmd *cobra.Command, args []string) {
-	
- group, err := graphHelper.GetGroupById("12c53ea7-9b08-4b4e-a1d7-06c8ced53d8c")
-	 if err != nil {		
-		fmt.Println("Error:", err)
-		return
-	}
-	fmt.Println(group)
 
-	 
+	Run: func(cmd *cobra.Command, args []string) {
+
+		group, err := graphHelper.GetGroupById("12c53ea7-9b08-4b4e-a1d7-06c8ced53d8c")
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		fmt.Println(group)
+
 	},
 }
 
 func init() {
 	GroupsCmd.AddCommand(getgroupbyidCmd)
- 
+
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

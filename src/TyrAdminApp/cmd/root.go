@@ -31,8 +31,7 @@ to quickly create a Cobra application.`,
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("365Admin")
-	 },
-
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -50,13 +49,13 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
- //Add my subCommand palette here
- 	// rootCmd.AddCommand(interactiveCmd)
+	//Add my subCommand palette here
+	// rootCmd.AddCommand(interactiveCmd)
 	rootCmd.AddCommand(teamGov.TeamGovCmd)
 	rootCmd.AddCommand(graphCommands.GraphCmd)
 	rootCmd.AddCommand(azure.AzureCmd)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config.json)")
-    rootCmd.PersistentFlags().BoolVarP(&Output, "output", "o", false, "Ensures that the selected command is output to the standard outout.")
+	rootCmd.PersistentFlags().BoolVarP(&Output, "output", "o", false, "Ensures that the selected command is output to the standard outout.")
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
@@ -87,6 +86,7 @@ func initConfig() {
 	}
 
 }
+
 // package cmd
 
 // import (
@@ -151,7 +151,7 @@ func initConfig() {
 //                 fmt.Println("Error:", err)
 //                 return
 //             }
-           
+
 //         json.Unmarshal(body, &dataText)
 //         // Call the function that handles "List Users"
 //     case 1:
@@ -231,9 +231,8 @@ func initConfig() {
 // 	}
 // }
 
-
 // func updateResultsView(app *tview.Application, resultsView *tview.Table, requests []teamGov.Request) {
-// 	 fmt.Println("Updating results view with new data") // 
+// 	 fmt.Println("Updating results view with new data") //
 //     app.QueueUpdateDraw(func() {
 //         resultsView.Clear()
 
@@ -259,4 +258,3 @@ func initConfig() {
 //         }
 //     })
 // }
-

@@ -67,7 +67,7 @@ func SaveDataToJSONFile(data interface{}, filename string) error {
 
 	// Write the JSON data to file
 	err = os.WriteFile(filename, jsonData, 0644)
-	
+
 	if err != nil {
 		return fmt.Errorf("error writing to file: %w", err)
 	}
@@ -101,7 +101,7 @@ func ReadDataFromJSONFile(filename string, data interface{}) error {
 }
 
 func DeleteFile(filename string) error {
-	
+
 	err := os.Remove(filename)
 	if err != nil {
 		return fmt.Errorf("error deleting file: %w", err)

@@ -11,8 +11,10 @@ import (
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
+
 var teamGuid string
 var searchString string
+
 // ensureFilesFolderCmd represents the ensureFilesFolder command
 var getTabsCmd = &cobra.Command{
 	Use:   "getTabs",
@@ -24,22 +26,22 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-					body, err := teamGov.Get("GetGroups", map[string]string{"searchText": searchString})
-			if err != nil {
-				fmt.Println("Error:", err)
-				return
-			}
-			groups, err := teamGov.UnmarshalGroups(&body);
-			if err != nil {
-				fmt.Println("Error:", err)
-				return
-			}
-			teams, err := selectTeams(groups)
-			if err != nil {
-					fmt.Println("Error:", err)
-					return
-				}
-			for _, team := range teams {
+		body, err := teamGov.Get("GetGroups", map[string]string{"searchText": searchString})
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		groups, err := teamGov.UnmarshalGroups(&body)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		teams, err := selectTeams(groups)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		for _, team := range teams {
 			allChannels, err := graphHelper.GetAllChannels(team)
 			if err != nil {
 				fmt.Println("Error:", err)
@@ -62,7 +64,6 @@ to quickly create a Cobra application.`,
 					fmt.Println("TabId:", *tab.GetId())
 					fmt.Println("TabWebUrl:", *tab.GetWebUrl())
 
-					
 				}
 
 				// fmt.Println("Drive:", *drive.GetName())
@@ -73,14 +74,10 @@ to quickly create a Cobra application.`,
 				// fmt.Println("DriveCreatedBy:", drive.GetCreatedBy())
 				// fmt.Println("DriveGetSpecialFolders:", drive.GetSpecialFolder())
 
-				
+			}
 		}
-	 }
-  },
+	},
 }
-
-	
-
 
 func init() {
 	//add flag to search for groups
@@ -89,73 +86,73 @@ func init() {
 	GraphCmd.AddCommand(getTabsCmd)
 
 }
-func selectTeams(groups []teamGov.UnifiedGroup)([]string, error) {
-    var options []string
-    teamNameToGroupId := make(map[string]string) // Map to associate team names with their GroupIds
+func selectTeams(groups []teamGov.UnifiedGroup) ([]string, error) {
+	var options []string
+	teamNameToGroupId := make(map[string]string) // Map to associate team names with their GroupIds
 
-    // Populate the options slice and the map
-    for _, group := range groups {
-        option := fmt.Sprintf("Option %s", group.DisplayName)
-        options = append(options, option)
-        teamNameToGroupId[option] = group.GroupId // Use the formatted option as key for consistency
-    }
+	// Populate the options slice and the map
+	for _, group := range groups {
+		option := fmt.Sprintf("Option %s", group.DisplayName)
+		options = append(options, option)
+		teamNameToGroupId[option] = group.GroupId // Use the formatted option as key for consistency
+	}
 
-    // Create a new interactive multiselect printer with the options
-    printer := pterm.DefaultInteractiveMultiselect.
-        WithOptions(options).
-        WithFilter(false).
-        WithCheckmark(&pterm.Checkmark{Checked: pterm.Green("+"), Unchecked: pterm.Red("-")})
+	// Create a new interactive multiselect printer with the options
+	printer := pterm.DefaultInteractiveMultiselect.
+		WithOptions(options).
+		WithFilter(false).
+		WithCheckmark(&pterm.Checkmark{Checked: pterm.Green("+"), Unchecked: pterm.Red("-")})
 
-    // Show the interactive multiselect and get the selected options
-    selectedOptions, _ := printer.Show()
+	// Show the interactive multiselect and get the selected options
+	selectedOptions, _ := printer.Show()
 
-    // Initialize a slice for selected GroupIds based on selected options
-    var selectedGroupIds []string
-    for _, selectedOption := range selectedOptions {
-        if groupId, exists := teamNameToGroupId[selectedOption]; exists {
-            selectedGroupIds = append(selectedGroupIds, groupId)
-        }
-    }
-
-    pterm.Info.Printfln("Selected GroupIds: %s", pterm.Green(selectedGroupIds))
-
-		if len(selectedGroupIds) == 0 {
-			return nil, fmt.Errorf("No groups selected")
+	// Initialize a slice for selected GroupIds based on selected options
+	var selectedGroupIds []string
+	for _, selectedOption := range selectedOptions {
+		if groupId, exists := teamNameToGroupId[selectedOption]; exists {
+			selectedGroupIds = append(selectedGroupIds, groupId)
 		}
-		return selectedGroupIds, nil
+	}
+
+	pterm.Info.Printfln("Selected GroupIds: %s", pterm.Green(selectedGroupIds))
+
+	if len(selectedGroupIds) == 0 {
+		return nil, fmt.Errorf("No groups selected")
+	}
+	return selectedGroupIds, nil
 }
-func selectChannels(teamChannels models.ChannelCollectionResponseable)([]string, error) {
-    var options []string
-    teamNameToGroupId := make(map[string]string) // Map to associate team names with their GroupIds
+func selectChannels(teamChannels models.ChannelCollectionResponseable) ([]string, error) {
+	var options []string
+	teamNameToGroupId := make(map[string]string) // Map to associate team names with their GroupIds
 
-    // Populate the options slice and the map
-    for _, channel := range teamChannels.GetValue() {
-        option := fmt.Sprintf("Option %s", *channel.GetDisplayName())
-        options = append(options, option)
-        teamNameToGroupId[option] = *channel.GetId() // Use the formatted option as key for consistency
-    }
+	// Populate the options slice and the map
+	for _, channel := range teamChannels.GetValue() {
+		option := fmt.Sprintf("Option %s", *channel.GetDisplayName())
+		options = append(options, option)
+		teamNameToGroupId[option] = *channel.GetId() // Use the formatted option as key for consistency
+	}
 
-    // Create a new interactive multiselect printer with the options
-    printer := pterm.DefaultInteractiveMultiselect.
-        WithOptions(options).
-        WithFilter(false).
-        WithCheckmark(&pterm.Checkmark{Checked: pterm.Green("+"), Unchecked: pterm.Red("-")})
+	// Create a new interactive multiselect printer with the options
+	printer := pterm.DefaultInteractiveMultiselect.
+		WithOptions(options).
+		WithFilter(false).
+		WithCheckmark(&pterm.Checkmark{Checked: pterm.Green("+"), Unchecked: pterm.Red("-")})
 
-    // Show the interactive multiselect and get the selected options
-    selectedOptions, _ := printer.Show()
+	// Show the interactive multiselect and get the selected options
+	selectedOptions, _ := printer.Show()
 
-    // Initialize a slice for selected GroupIds based on selected options
-    var selectedGroupIds []string
-    for _, selectedOption := range selectedOptions {
-        if groupId, exists := teamNameToGroupId[selectedOption]; exists {
-            selectedGroupIds = append(selectedGroupIds, groupId)
-        }
-    }
-
-    pterm.Info.Printfln("Selected GroupIds: %s", pterm.Green(selectedGroupIds))
-
-		if len(selectedGroupIds) == 0 {
-			return nil, fmt.Errorf("No groups selected")
+	// Initialize a slice for selected GroupIds based on selected options
+	var selectedGroupIds []string
+	for _, selectedOption := range selectedOptions {
+		if groupId, exists := teamNameToGroupId[selectedOption]; exists {
+			selectedGroupIds = append(selectedGroupIds, groupId)
 		}
-		return selectedGroupIds, nil
+	}
+
+	pterm.Info.Printfln("Selected GroupIds: %s", pterm.Green(selectedGroupIds))
+
+	if len(selectedGroupIds) == 0 {
+		return nil, fmt.Errorf("No groups selected")
+	}
+	return selectedGroupIds, nil
 }

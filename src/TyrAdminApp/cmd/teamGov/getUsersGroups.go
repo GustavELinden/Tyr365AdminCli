@@ -8,7 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
 var userEmail string
+
 // getUsersGroupsCmd represents the getUsersGroups command
 var getUsersGroupsCmd = &cobra.Command{
 	Use:   "getUsersGroups",
