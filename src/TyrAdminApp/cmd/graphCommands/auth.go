@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd/teamGov"
 	graphhelper "github.com/GustavELinden/TyrAdminCli/365Admin/graphHelper"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +27,12 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("auth called")
 
-		displayAccessToken(graphHelper)
+		// displayAccessToken(graphHelper)
+	token, err :=	teamGov.AuthGovernanceApi()
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	fmt.Println(token)
 	},
 }
 

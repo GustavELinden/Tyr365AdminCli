@@ -1,15 +1,55 @@
 package graphhelper
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
 
-	// users  "github.com/microsoftgraph/msgraph-sdk-go/users"
+	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd/teamGov"
 	viperConfig "github.com/GustavELinden/TyrAdminCli/365Admin/config"
+	"github.com/google/uuid"
 	bmodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	models "github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/users"
 	//other-imports
 )
+type NewAssignment struct {
+	ODataType string `json:"@odata.type"`
+	OrderHint string `json:"orderHint"`
+}
+
+// Constructor function for NewAssignment
+func NewNewAssignment() *NewAssignment {
+	return &NewAssignment{
+		ODataType: "#microsoft.graph.plannerAssignment",
+		OrderHint: " !",
+	}
+}
+type NewTaskPayload struct {
+	PlanId      string                           `json:"planId"`
+	BucketId    string                           `json:"bucketId"`
+	Title       string                           `json:"title"`
+	Assignments map[string]map[string]interface{} `json:"assignments"`
+}
+type PlannerTask struct {
+	PlanId      string                           `json:"planId"`
+	BucketId    string                           `json:"bucketId"`
+	Title       string                           `json:"title"`
+	Assignments map[string]*NewAssignment `json:"assignments"`
+}
+type ChecklistItem struct {
+	ODataType string `json:"@odata.type"`
+	Title     string `json:"title"`
+	IsChecked bool   `json:"isChecked"`
+}
+
+type TaskDetailsUpdate struct {
+	Checklist map[string]interface{} `json:"checklist"`
+}
 
 type User struct {
 	ID                              string   `json:"id,omitempty"`
@@ -130,8 +170,112 @@ func (g *GraphHelper) CreateTask(taskTitle string) (models.PlannerTaskable, erro
 	if err != nil {
 		return nil, err
 	}
-
+  
 	return result, nil
+}
+// func (g *GraphHelper) CreateTaskWithChecklist(title string, checklistStr string) (models.PlannerTaskable, error) {
+
+// requestBody := models.NewPlannerTaskDetails()
+// previewType := models.NOPREVIEW_PLANNERPREVIEWTYPE
+// requestBody.SetPreviewType(&previewType)
+// 	viper, _ := viperConfig.InitViper("config.json")
+// 	planId := viper.GetString("planId")
+// 	bucketId := viper.GetString("bucketId")
+// 	newTask := models.NewPlannerTask()
+// 	newTask.SetPlanId(&planId)
+// 	newTask.SetBucketId(&bucketId)
+// 	newTask.SetTitle(&title)
+//   assignments := models.NewPlannerAssignments()
+
+//   newTask.SetAssignments(assignments)
+// 	task, err := g.appClient.Planner().Tasks().Post(context.Background(), newTask, nil)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	taskID := task.GetId()
+// err = UpdateTaskWithChecklistItems(*taskID, checklistStr)
+// if err != nil {
+// 	fmt.Println("Error: ", err)
+// }
+// return task, nil
+
+// }
+func (g *GraphHelper) CreateTaskWithChecklist(title, checklistStr string) (string, error) {
+viper, err := viperConfig.InitViper("config.json")
+
+
+
+	planId := viper.GetString("planId")
+	bucketId := viper.GetString("bucketId")
+	accessToken, _ := teamGov.AuthGraphApi()
+
+assignees := make(map[string]*NewAssignment)
+	// Assign the task to a specific user by their ID
+	assignees["fe429714-d600-4948-a412-b9983986356e"] = &NewAssignment{
+		ODataType: "#microsoft.graph.plannerAssignment",
+		OrderHint: " !",
+	}
+
+	// Prepare the task payload
+	newTask := PlannerTask{
+		PlanId:      planId,
+		BucketId:    bucketId,
+		Title:       title,
+		Assignments: assignees,
+	}
+
+	taskBytes, err := json.Marshal(newTask)
+	if err != nil {
+		return "", err
+	}
+
+	taskID, err := createPlannerTask(taskBytes, accessToken)
+	if err != nil {
+		return "", err
+	}
+
+	err = UpdateTaskWithChecklistItems(taskID, checklistStr)
+	if err != nil {
+		return "", err
+	}
+
+	return taskID, nil
+}
+
+// Helper function to create a Planner task
+func createPlannerTask(taskPayload []byte, accessToken string) (string, error) {
+	req, err := http.NewRequest("POST", "https://graph.microsoft.com/v1.0/planner/tasks", bytes.NewBuffer(taskPayload))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Add("Authorization", "Bearer "+accessToken)
+	req.Header.Add("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("failed to create task, status code: %d, response: %s", resp.StatusCode, string(body))
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+
+	// Assuming the task ID is available in the response
+	taskID, ok := result["id"].(string)
+	if !ok {
+		return "", fmt.Errorf("task ID not found in response")
+	}
+
+	return taskID, nil
 }
 
 func (g *GraphHelper) GetTeamById(teamId string) (models.Teamable, error) {
@@ -157,3 +301,62 @@ func (g *GraphHelper) GetTabs(teamId string, channelId string) (models.TeamsTabC
 	teamTabs, nil := g.appClient.Teams().ByTeamId(teamId).Channels().ByChannelId(channelId).Tabs().Get(context.Background(), nil)
 	return teamTabs, nil
 }
+
+func UpdateTaskWithChecklistItems(taskID, checklistStr string) error {
+	// Split the checklistStr into individual titles
+	titles := strings.Split(checklistStr, ",")
+
+	// Initialize the checklist map
+	checklist := make(map[string]interface{})
+	for _, title := range titles {
+		checklistItemId := uuid.New().String() // Generate a unique ID for the checklist item
+		checklist[checklistItemId] = ChecklistItem{
+			ODataType: "microsoft.graph.plannerChecklistItem",
+			Title:     strings.TrimSpace(title),
+			IsChecked: false,
+		}
+	}
+
+	// Prepare the update payload
+	updatePayload := TaskDetailsUpdate{
+		Checklist: checklist,
+	}
+
+	updateBytes, err := json.Marshal(updatePayload)
+	if err != nil {
+		return fmt.Errorf("error marshalling update payload: %v", err)
+	}
+
+	// Prepare the PATCH request
+	req, err := http.NewRequest("PATCH", fmt.Sprintf("https://graph.microsoft.com/v1.0/planner/tasks/%s/details", taskID), bytes.NewBuffer(updateBytes))
+	if err != nil {
+		return fmt.Errorf("error creating request: %v", err)
+	}
+  accessToken, err := teamGov.AuthGraphApi()
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return  err
+	}
+	eTag, err := teamGov.GetTaskETag(taskID)
+	fmt.Println(eTag)
+	req.Header.Add("Authorization", "Bearer "+accessToken)
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("If-Match", eTag) // Concurrency control
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("error making request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Check for successful response
+	if resp.StatusCode != 204 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("API returned non-OK status: %d, body: %s", resp.StatusCode, string(body))
+	}
+
+	fmt.Println("Checklist items added successfully.")
+	return nil
+}
+

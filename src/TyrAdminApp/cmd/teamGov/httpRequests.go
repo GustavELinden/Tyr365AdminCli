@@ -408,3 +408,29 @@ func PrintJSONResponseString(body *[]byte) error {
 	fmt.Println(&responseString)
 	return nil
 }
+
+func GetTaskETag(taskID string) (string, error) {
+    url := fmt.Sprintf("https://graph.microsoft.com/v1.0/planner/tasks/%s/details", taskID)
+    req, err := http.NewRequest("GET", url, nil)
+    if err != nil {
+        return "", err
+    }
+
+    accessToken, err := AuthGraphApi()
+    req.Header.Add("Authorization", "Bearer "+accessToken)
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+			  
+        return "", err
+    }
+    defer resp.Body.Close()
+
+    // ETag is found in the "ETag" response 
+		
+    etag := resp.Header.Get("ETag")
+    if etag == "" {
+        return "", fmt.Errorf("ETag header not found in response")
+    }
+    return etag, nil
+}
