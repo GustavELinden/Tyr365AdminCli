@@ -11,7 +11,7 @@ import (
 
 	// "github.com/microsoftgraph/msgraph-sdk-go/models"
 	// "github.com/microsoftgraph/msgraph-sdk-go/users"
-	viperConfig "github.com/GustavELinden/TyrAdminCli/config"
+	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
 	graphbeta "github.com/microsoftgraph/msgraph-beta-sdk-go"
 )
 

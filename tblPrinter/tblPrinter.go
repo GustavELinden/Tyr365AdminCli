@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/GustavELinden/TyrAdminCli/cmd/teamGov"
+	"github.com/GustavELinden/Tyr365AdminCli/cmd/teamGov"
 	"github.com/olekukonko/tablewriter"
 )
 

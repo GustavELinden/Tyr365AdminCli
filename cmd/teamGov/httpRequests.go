@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
-	viperConfig "github.com/GustavELinden/TyrAdminCli/config"
+	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
 )
 
 type Request struct {

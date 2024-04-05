@@ -6,7 +6,7 @@ import (
 	"os"
 	"sync"
 
-	saveToFile "github.com/GustavELinden/TyrAdminCli/SaveToFile"
+	saveToFile "github.com/GustavELinden/Tyr365AdminCli/SaveToFile"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )

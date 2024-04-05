@@ -1,4 +1,4 @@
-module github.com/GustavELinden/TyrAdminCli
+module github.com/GustavELinden/Tyr365AdminCli
 
 go 1.22.1
 

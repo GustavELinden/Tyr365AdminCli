@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/GustavELinden/TyrAdminCli/cmd/teamGov"
-	viperConfig "github.com/GustavELinden/TyrAdminCli/config"
+	"github.com/GustavELinden/Tyr365AdminCli/cmd/teamGov"
+	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
 	"github.com/google/uuid"
 	bmodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	models "github.com/microsoftgraph/msgraph-sdk-go/models"
