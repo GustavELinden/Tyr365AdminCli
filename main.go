@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd"
-	viperConfig "github.com/GustavELinden/TyrAdminCli/365Admin/config"
+	"github.com/GustavELinden/TyrAdminCli/cmd"
+	viperConfig "github.com/GustavELinden/TyrAdminCli/config"
 )
 
 func main() {

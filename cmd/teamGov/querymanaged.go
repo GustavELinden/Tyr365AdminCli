@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 
-	saveToFile "github.com/GustavELinden/TyrAdminCli/365Admin/SaveToFile"
+	saveToFile "github.com/GustavELinden/TyrAdminCli/SaveToFile"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )

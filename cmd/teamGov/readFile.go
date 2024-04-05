@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	saveToFile "github.com/GustavELinden/TyrAdminCli/365Admin/SaveToFile"
+	saveToFile "github.com/GustavELinden/TyrAdminCli/SaveToFile"
 	"github.com/spf13/cobra"
 )
 

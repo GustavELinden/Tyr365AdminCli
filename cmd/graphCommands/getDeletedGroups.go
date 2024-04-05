@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd/teamGov"
+	"github.com/GustavELinden/TyrAdminCli/cmd/teamGov"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
