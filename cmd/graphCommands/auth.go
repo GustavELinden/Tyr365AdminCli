@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/GustavELinden/TyrAdminCli/cmd/teamGov"
-	graphhelper "github.com/GustavELinden/TyrAdminCli/graphHelper"
+	"github.com/GustavELinden/Tyr365AdminCli/cmd/teamGov"
+	graphhelper "github.com/GustavELinden/Tyr365AdminCli/graphHelper"
 	"github.com/spf13/cobra"
 )
 
