@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd/azure"
-	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd/graphCommands"
-	"github.com/GustavELinden/TyrAdminCli/365Admin/cmd/teamGov"
+	"github.com/GustavELinden/TyrAdminCli/cmd/azure"
+	"github.com/GustavELinden/TyrAdminCli/cmd/graphCommands"
+	"github.com/GustavELinden/TyrAdminCli/cmd/teamGov"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

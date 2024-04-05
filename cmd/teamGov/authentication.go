@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	viperConfig "github.com/GustavELinden/TyrAdminCli/365Admin/config"
+	viperConfig "github.com/GustavELinden/TyrAdminCli/config"
 )
 
 type TokenCached struct {
