@@ -11,6 +11,7 @@ import (
 
 var title string
 var checklist string
+
 // addTaskCmd represents the addTask command
 var addTaskCmd = &cobra.Command{
 	Use:   "addTask",
@@ -23,8 +24,8 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if cmd.Flag("title").Changed {
-			
-			_ , err := graphHelper.CreateTaskWithChecklist(title,checklist)
+
+			_, err := graphHelper.CreateTaskWithChecklist(title, checklist)
 			if err != nil {
 				fmt.Println("Error:", err)
 				return
@@ -32,7 +33,7 @@ to quickly create a Cobra application.`,
 			fmt.Println("Task created successfully")
 			// fmt.Println(*response.GetId())
 			// if cmd.Flag("checklist").Changed {
-				
+
 			// }
 		}
 
@@ -42,7 +43,7 @@ to quickly create a Cobra application.`,
 func init() {
 	GraphCmd.AddCommand(addTaskCmd)
 	addTaskCmd.Flags().StringVarP(&title, "title", "t", "", "The title of the task")
-	addTaskCmd.Flags().StringVarP(&checklist,"checklist", "c", "", "add extra points to a task")	
+	addTaskCmd.Flags().StringVarP(&checklist, "checklist", "c", "", "add extra points to a task")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

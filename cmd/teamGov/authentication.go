@@ -85,7 +85,7 @@ func AuthGovernanceApi() (string, error) {
 
 	return accessToken, nil
 }
-func AuthGraphApi()(string, error) {
+func AuthGraphApi() (string, error) {
 	viper, err := viperConfig.InitViper("config.json")
 	if err != nil {
 		fmt.Printf("Error initializing viper: %v\n", err)

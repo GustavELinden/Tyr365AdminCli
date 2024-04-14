@@ -3,6 +3,7 @@ package teamGov
 import (
 	"fmt"
 
+	"github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
 	"github.com/spf13/cobra"
 )
 
@@ -15,12 +16,12 @@ var countqueuedjobsCmd = &cobra.Command{
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
-		body, err := Get("CountQueuedJobs")
+		body, err := teamGovHttp.Get("CountQueuedJobs")
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
-		resp, err := UnmarshalInteger(&body)
+		resp, err := teamGovHttp.UnmarshalInteger(&body)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return

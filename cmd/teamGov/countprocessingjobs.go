@@ -6,6 +6,7 @@ package teamGov
 import (
 	"fmt"
 
+	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
 	"github.com/spf13/cobra"
 )
 
@@ -18,12 +19,12 @@ var countprocessingjobsCmd = &cobra.Command{
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
-		body, err := Get("GetProcessingRequests")
+		body, err := teamGovHttp.Get("GetProcessingRequests")
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
-		requests, err := UnmarshalInteger(&body)
+		requests, err := teamGovHttp.UnmarshalRequests(&body)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return

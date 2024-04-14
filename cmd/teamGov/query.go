@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	saveToFile "github.com/GustavELinden/Tyr365AdminCli/SaveToFile"
+	"github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -65,12 +66,12 @@ var queryCmd = &cobra.Command{
 			queryParams["top"] = fmt.Sprintf("%d", top)
 		}
 
-		body, err := GetQuery("CliQuery", queryParams)
+		body, err := teamGovHttp.GetQuery("CliQuery", queryParams)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
-		requests, err := UnmarshalRequests(&body)
+		requests, err := teamGovHttp.UnmarshalRequests(&body)
 
 		if err != nil {
 			fmt.Println("Error:", err)
@@ -128,7 +129,7 @@ func init() {
 	queryCmd.Flags().IntVarP(&templateID, "templateID", "T", 0, "Template ID to filter the requests")
 	TeamGovCmd.AddCommand(queryCmd)
 }
-func renderRequests(requests []Request) {
+func renderRequests(requests []teamGovHttp.Request) {
 	// Reflect the slice to work with its elements
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Endpoint", "CallerID", "Status", "ProvisioningStep", "Message", "InitiatedBy", "Modified", "RetryCount", "QueuePriority"}) // Customize the table header as needed
@@ -157,15 +158,15 @@ func renderRequests(requests []Request) {
 	table.Render()
 }
 
-func RunGORutine(requests []Request, templateID int) {
+func RunGORutine(requests []teamGovHttp.Request, templateID int) {
 	// Use goroutines to process requests concurrently
 	// WaitGroup is like an advnaced clock that waits for all goroutines to finish
 	var wg sync.WaitGroup
 	// Assuming a buffer size, which might be tuned based on your application's requirements
 	bufferSize := 100
 
-	requestsChan := make(chan Request, bufferSize) // Buffered channel for requests
-	resultsChan := make(chan Request, bufferSize)  // Buffered channel for results
+	requestsChan := make(chan teamGovHttp.Request, bufferSize) // Buffered channel for requests
+	resultsChan := make(chan teamGovHttp.Request, bufferSize)  // Buffered channel for results
 
 	// Start worker goroutines
 	numWorkers := 20 // This might be adjusted based on your system's capabilities
@@ -187,7 +188,7 @@ func RunGORutine(requests []Request, templateID int) {
 	close(requestsChan) // Signal workers that no more requests are coming
 
 	// Collect and process matching requests
-	var matchedRequests []Request
+	var matchedRequests []teamGovHttp.Request
 	for req := range resultsChan {
 		matchedRequests = append(matchedRequests, req)
 	}
@@ -195,44 +196,11 @@ func RunGORutine(requests []Request, templateID int) {
 	renderRequests(matchedRequests)
 }
 
-// func RunGORutine(requests []Request, templateID int) {
-//    var wg sync.WaitGroup
-//     requestsChan := make(chan Request)
-//     resultsChan := make(chan Request) // Channel to collect matching requests
-
-//     // Start worker goroutines
-//     numWorkers := 5
-//     for i := 0; i < numWorkers; i++ {
-//         wg.Add(1)
-//         go worker(&wg,templateID , requestsChan, resultsChan)
-//     }
-
-//     // Collector goroutine to gather results
-//     go func() {
-//         wg.Wait()
-//         close(resultsChan) // Close results channel once all workers are done
-//     }()
-
-//     // Send requests to the workers
-//     for _, req := range requests {
-//         requestsChan <- req
-//     }
-//     close(requestsChan) // Signal workers that no more requests are coming
-
-//     // Collect and process matching requests
-//     var matchedRequests []Request
-//     for req := range resultsChan {
-//         matchedRequests = append(matchedRequests, req)
-//     }
-
-//     renderRequests(matchedRequests)
-// }
-
-func worker(wg *sync.WaitGroup, templateID int, requestsChan <-chan Request, resultsChan chan<- Request) {
+func worker(wg *sync.WaitGroup, templateID int, requestsChan <-chan teamGovHttp.Request, resultsChan chan<- teamGovHttp.Request) {
 
 	defer wg.Done()
 	for req := range requestsChan {
-		var params Parameters
+		var params teamGovHttp.Parameters
 		if err := json.Unmarshal([]byte(req.Parameters), &params); err != nil {
 			fmt.Printf("Error unmarshaling Parameters for request ID %d: %v\n", req.ID, err)
 			continue
@@ -244,7 +212,7 @@ func worker(wg *sync.WaitGroup, templateID int, requestsChan <-chan Request, res
 	}
 }
 
-func savedToFile(requests *[]Request) {
+func savedToFile(requests *[]teamGovHttp.Request) {
 	var fileName string
 	fmt.Println("Name your new excel file:")
 	fmt.Scanln(&fileName)

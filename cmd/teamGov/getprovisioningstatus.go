@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -16,12 +17,12 @@ var getprovisioningstatusCmd = &cobra.Command{
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
-		body, err := Get("GetProvisioningStatus", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
+		body, err := teamGovHttp.Get("GetProvisioningStatus", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
-		requests, err := UnmarshalRequests(&body)
+		requests, err := teamGovHttp.UnmarshalRequests(&body)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
@@ -39,7 +40,7 @@ func init() {
 	TeamGovCmd.AddCommand(getprovisioningstatusCmd)
 }
 
-func RenderRequests(requests []Request) {
+func RenderRequests(requests []teamGovHttp.Request) {
 	// Create a table to display the response data
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Endpoint", "CallerID", "Status", "ProvisioningStep", "Message", "InitiatedBy", "Modified", "RetryCount", "QueuePriority"}) // Customize the table header as needed

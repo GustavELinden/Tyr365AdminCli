@@ -7,24 +7,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
-
-type UnifiedGroup struct {
-	GroupId            string      `json:"groupId"`
-	DisplayName        string      `json:"displayName"`
-	Alias              string      `json:"alias"`
-	Description        string      `json:"description"`
-	CreatedDate        string      `json:"createdDate"`
-	SharePointUrl      string      `json:"sharePointUrl"`
-	Visibility         string      `json:"visibility"`
-	Team               string      `json:"team"`
-	Yammer             interface{} `json:"yammer"`
-	Label              interface{} `json:"label"`
-	ExpirationDateTime interface{} `json:"expirationDateTime"`
-	ExchangeProperties interface{} `json:"exchangeProperties"`
-}
 
 var searchString string
 
@@ -40,12 +26,12 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if cmd.Flags().Changed("searchText") {
-			body, err := Get("GetGroups", map[string]string{"searchText": searchString})
+			body, err := teamGovHttp.Get("GetGroups", map[string]string{"searchText": searchString})
 			if err != nil {
 				fmt.Println("Error:", err)
 				return
 			}
-			groups, err := UnmarshalGroups(&body)
+			groups, err := teamGovHttp.UnmarshalGroups(&body)
 			if err != nil {
 				fmt.Println("Error:", err)
 				return
@@ -62,7 +48,7 @@ func init() {
 
 }
 
-func RenderGroups(groups []UnifiedGroup) {
+func RenderGroups(groups []teamGovHttp.UnifiedGroup) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"GroupId", "DisplayName", "Alias", "Description", "CreatedDate", "SharePointUrl", "Visibility", "Team", "Yammer", "Label"}) // Customize the table header as needed
 

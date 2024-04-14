@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/GustavELinden/Tyr365AdminCli/cmd/teamGov"
+	teamGov "github.com/GustavELinden/Tyr365AdminCli/cmd/teamGov"
 	graphhelper "github.com/GustavELinden/Tyr365AdminCli/graphHelper"
 	"github.com/spf13/cobra"
 )
@@ -28,22 +28,22 @@ to quickly create a Cobra application.`,
 		fmt.Println("auth called")
 
 		// displayAccessToken(graphHelper)
-	token, err :=	teamGov.AuthGovernanceApi()
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	fmt.Println(token)
+		token, err := teamGov.AuthGovernanceApi()
+		if err != nil {
+			fmt.Println("error:", err)
+		}
+		fmt.Println(token)
 	},
 }
 
 func init() {
 	graphHelper = graphhelper.NewGraphHelper()
 
-	initializeGraph(graphHelper)
+	InitializeGraph(graphHelper)
 	GraphCmd.AddCommand(authCmd)
 
 }
-func initializeGraph(graphHelper *graphhelper.GraphHelper) {
+func InitializeGraph(graphHelper *graphhelper.GraphHelper) {
 	err := graphHelper.InitializeGraphForAppAuth()
 	if err != nil {
 		log.Panicf("Error initializing Graph for app auth: %v\n", err)

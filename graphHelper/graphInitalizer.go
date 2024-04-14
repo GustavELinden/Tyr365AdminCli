@@ -1,4 +1,4 @@
-package graphhelper
+package GraphHelper
 
 import (
 	"context"
@@ -33,9 +33,9 @@ func (g *GraphHelper) InitializeGraphForAppAuth() error {
 
 	}
 
-clientId := viper.GetString("M365managementAppClientId")
+	clientId := viper.GetString("M365managementAppClientId")
 	tenantId := viper.GetString("O365TenantName")
-	clientSecret := viper.GetString("M365ManagementAppClientSecret")	
+	clientSecret := viper.GetString("M365ManagementAppClientSecret")
 
 	credential, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, nil)
 	if err != nil {

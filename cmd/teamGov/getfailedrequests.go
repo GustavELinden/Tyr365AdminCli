@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	saveToFile "github.com/GustavELinden/Tyr365AdminCli/SaveToFile"
+	"github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
@@ -19,12 +20,12 @@ var getfailedrequestsCmd = &cobra.Command{
 		You specify the source by using the flag --callerID. For example: 365Admin teamGov getfailedrequests --callerID "Tyra".
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		response, err := Get("GetFailedRequests", map[string]string{"callerID": callerID})
+		response, err := teamGovHttp.Get("GetFailedRequests", map[string]string{"callerID": callerID})
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
-		requests, errs := UnmarshalRequests(&response)
+		requests, errs := teamGovHttp.UnmarshalRequests(&response)
 		if errs != nil {
 			fmt.Println("Error:", errs)
 			return
@@ -68,7 +69,7 @@ func init() {
 
 }
 
-func requeueSelectedTeams(requests []Request) {
+func requeueSelectedTeams(requests []teamGovHttp.Request) {
 	var options []string
 	teamNameToGroupId := make(map[string]int) // Map to associate team names with their GroupIds
 
@@ -97,7 +98,7 @@ func requeueSelectedTeams(requests []Request) {
 
 	if len(selectedGroupIds) > 0 {
 		for _, id := range selectedGroupIds {
-			_, err := Post("RetryRequest", map[string]string{"requestId": fmt.Sprintf("%d", id)})
+			_, err := teamGovHttp.Post("RetryRequest", map[string]string{"requestId": fmt.Sprintf("%d", id)})
 			if err != nil {
 				fmt.Println(err)
 			}

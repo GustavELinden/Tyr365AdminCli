@@ -3,6 +3,7 @@ package teamGov
 import (
 	"fmt"
 
+	"github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +16,7 @@ var retryRequestCmd = &cobra.Command{
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
-		body, err := Post("RetryRequest", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
+		body, err := teamGovHttp.Post("RetryRequest", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
 		if err != nil {
 			fmt.Println(err)
 		}

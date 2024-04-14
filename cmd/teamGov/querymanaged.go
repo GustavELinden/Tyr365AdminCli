@@ -9,6 +9,7 @@ import (
 	"os"
 
 	saveToFile "github.com/GustavELinden/Tyr365AdminCli/SaveToFile"
+	"github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -49,13 +50,13 @@ teamGov querymanaged --groupId "12345" --teamName "MyTeam" --status "active" --o
 			queryParams["status"] = status
 		}
 		// Get the response from the API
-		body, err := GetQuery("QueryManagedTeams", queryParams)
+		body, err := teamGovHttp.GetQuery("QueryManagedTeams", queryParams)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
 		// Unmarshal (deserialize for C# people) the response
-		managedTeams, err := UnmarshalManagedTeams(&body)
+		managedTeams, err := teamGovHttp.UnmarshalManagedTeams(&body)
 
 		if err != nil {
 			fmt.Println("Error:", err)
@@ -105,7 +106,7 @@ func init() {
 
 }
 
-func renderManagedTeams(managed *[]ManagedTeam) {
+func renderManagedTeams(managed *[]teamGovHttp.ManagedTeam) {
 	// Reflect the slice to work with its elements
 
 	table := tablewriter.NewWriter(os.Stdout)

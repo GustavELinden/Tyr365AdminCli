@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +16,7 @@ var countcreatedCmd = &cobra.Command{
 	Long: `This command will return the number of requests created this calendar year. For example: 365Admin teamGov countcreatedyear
 	The endpoints counted against are the following: Create, ApplySPTemplate, ApplyTeamTemplate, Group`,
 	Run: func(cmd *cobra.Command, args []string) {
-		numbm, err := Get("CountEntriesYear")
+		numbm, err := teamGovHttp.Get("CountEntriesYear")
 		if err != nil {
 			fmt.Println("Error:", err)
 			return

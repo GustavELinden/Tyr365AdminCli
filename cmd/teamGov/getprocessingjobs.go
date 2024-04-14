@@ -6,10 +6,10 @@ package teamGov
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-
+	"github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 // getprocessingjobsCmd represents the getprocessingjobs command
@@ -22,12 +22,12 @@ var getprocessingjobsCmd = &cobra.Command{
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
-		body, err := Get("GetProcessingJobs")
+		body, err := teamGovHttp.Get("GetProcessingJobs")
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
-		requests, err := UnmarshalRequests(&body)
+		requests, err := teamGovHttp.UnmarshalRequests(&body)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
@@ -56,7 +56,7 @@ func init() {
 
 }
 
-func RenderData(requests []Request) {
+func RenderData(requests []teamGovHttp.Request) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Endpoint", "CallerID", "Status", "ProvisioningStep", "Message", "InitiatedBy", "Modified"}) // Customize the table header as needed
 

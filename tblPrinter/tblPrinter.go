@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/GustavELinden/Tyr365AdminCli/cmd/teamGov"
+	"github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
 	"github.com/olekukonko/tablewriter"
 )
 
-func RenderTable(requests []teamGov.Request) {
+func RenderTable(requests []teamGovHttp.Request) {
 	// Reflect the slice to work with its elements
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Endpoint", "CallerID", "Status", "ProvisioningStep", "Message", "InitiatedBy", "Modified", "RetryCount", "QueuePriority"}) // Customize the table header as needed

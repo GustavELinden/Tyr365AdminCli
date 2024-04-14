@@ -7,7 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/GustavELinden/Tyr365AdminCli/cmd/teamGov"
+	"github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
+
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
@@ -42,12 +43,12 @@ to quickly create a Cobra application.`,
 			Ids: groupIds,
 		}
 
-		body, err := teamGov.PostWithBody("GetManagedTeams", nil, requestBody)
+		body, err := teamGovHttp.PostWithBody("GetManagedTeams", nil, requestBody)
 		if err != nil {
 			fmt.Println("Failed to get managed teams:", err)
 			return
 		}
-		var managedTeams []teamGov.ManagedTeam
+		var managedTeams []teamGovHttp.ManagedTeam
 		err = json.Unmarshal(body, &managedTeams)
 
 		if err != nil {
@@ -76,7 +77,7 @@ func init() {
 
 }
 
-func restoreSelectedTeams(managedTeams []teamGov.ManagedTeam) {
+func restoreSelectedTeams(managedTeams []teamGovHttp.ManagedTeam) {
 	var options []string
 	teamNameToGroupId := make(map[string]string) // Map to associate team names with their GroupIds
 
@@ -104,8 +105,6 @@ func restoreSelectedTeams(managedTeams []teamGov.ManagedTeam) {
 		}
 	}
 
-	// Now selectedGroupIds contains the GroupIds of the teams selected by the user
-	// You can proceed with the restoration process using these GroupIds
 	pterm.Info.Printfln("Selected GroupIds: %s", pterm.Green(selectedGroupIds))
 
 	// Add your logic here to restore teams based on selected GroupIds

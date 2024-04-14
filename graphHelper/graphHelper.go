@@ -1,15 +1,16 @@
-package graphhelper
+package GraphHelper
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
-	"github.com/GustavELinden/Tyr365AdminCli/cmd/teamGov"
 	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
 	"github.com/google/uuid"
 	bmodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
@@ -17,6 +18,7 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/users"
 	//other-imports
 )
+
 type NewAssignment struct {
 	ODataType string `json:"@odata.type"`
 	OrderHint string `json:"orderHint"`
@@ -29,16 +31,17 @@ func NewNewAssignment() *NewAssignment {
 		OrderHint: " !",
 	}
 }
+
 type NewTaskPayload struct {
-	PlanId      string                           `json:"planId"`
-	BucketId    string                           `json:"bucketId"`
-	Title       string                           `json:"title"`
+	PlanId      string                            `json:"planId"`
+	BucketId    string                            `json:"bucketId"`
+	Title       string                            `json:"title"`
 	Assignments map[string]map[string]interface{} `json:"assignments"`
 }
 type PlannerTask struct {
-	PlanId      string                           `json:"planId"`
-	BucketId    string                           `json:"bucketId"`
-	Title       string                           `json:"title"`
+	PlanId      string                    `json:"planId"`
+	BucketId    string                    `json:"bucketId"`
+	Title       string                    `json:"title"`
 	Assignments map[string]*NewAssignment `json:"assignments"`
 }
 type ChecklistItem struct {
@@ -170,9 +173,37 @@ func (g *GraphHelper) CreateTask(taskTitle string) (models.PlannerTaskable, erro
 	if err != nil {
 		return nil, err
 	}
-  
+
 	return result, nil
 }
+
+func (g *GraphHelper) GetAllTasks() ([]string, error) {
+	viper, _ := viperConfig.InitViper("config.json")
+
+	// Retrieve planId and bucketId from viper configuration
+
+	planId := viper.GetString("planId")
+	tasks, err := g.appClient.Planner().Plans().ByPlannerPlanId(planId).Tasks().Get(context.Background(), nil)
+
+	if err != nil {
+		fmt.Println("Error:", err)
+		return nil, err
+	}
+	var taskTitles []string
+	taskValues := tasks.GetValue()
+	for _, task := range taskValues {
+		title := task.GetTitle()
+		rdy := task.GetCompletedBy()
+		if rdy == nil {
+
+			taskTitles = append(taskTitles, *title)
+		}
+		if rdy != nil {
+		}
+	}
+	return taskTitles, nil
+}
+
 // func (g *GraphHelper) CreateTaskWithChecklist(title string, checklistStr string) (models.PlannerTaskable, error) {
 
 // requestBody := models.NewPlannerTaskDetails()
@@ -201,15 +232,13 @@ func (g *GraphHelper) CreateTask(taskTitle string) (models.PlannerTaskable, erro
 
 // }
 func (g *GraphHelper) CreateTaskWithChecklist(title, checklistStr string) (string, error) {
-viper, err := viperConfig.InitViper("config.json")
-
-
+	viper, err := viperConfig.InitViper("config.json")
 
 	planId := viper.GetString("planId")
 	bucketId := viper.GetString("bucketId")
-	accessToken, _ := teamGov.AuthGraphApi()
+	accessToken, _ := AuthGraphApi()
 
-assignees := make(map[string]*NewAssignment)
+	assignees := make(map[string]*NewAssignment)
 	// Assign the task to a specific user by their ID
 	assignees["fe429714-d600-4948-a412-b9983986356e"] = &NewAssignment{
 		ODataType: "#microsoft.graph.plannerAssignment",
@@ -297,6 +326,10 @@ func (g *GraphHelper) EnsureFilesFolder(teamId string, channelId string) (models
 	drive, nil := g.appClient.Teams().ByTeamId(teamId).Channels().ByChannelId(channelId).FilesFolder().Get(context.Background(), nil)
 	return drive, nil
 }
+func (g *GraphHelper) EnsureOneNote(teamId string, channelId string) (models.Onenoteable, error) {
+	Onenote, nil := g.appClient.Groups().ByGroupId(teamId).Onenote().Get(context.Background(), nil)
+	return Onenote, nil
+}
 func (g *GraphHelper) GetTabs(teamId string, channelId string) (models.TeamsTabCollectionResponseable, error) {
 	teamTabs, nil := g.appClient.Teams().ByTeamId(teamId).Channels().ByChannelId(channelId).Tabs().Get(context.Background(), nil)
 	return teamTabs, nil
@@ -332,12 +365,12 @@ func UpdateTaskWithChecklistItems(taskID, checklistStr string) error {
 	if err != nil {
 		return fmt.Errorf("error creating request: %v", err)
 	}
-  accessToken, err := teamGov.AuthGraphApi()
+	accessToken, err := AuthGraphApi()
 	if err != nil {
 		fmt.Println("Error: ", err)
-		return  err
+		return err
 	}
-	eTag, err := teamGov.GetTaskETag(taskID)
+	eTag, err := GetTaskETag(taskID)
 	fmt.Println(eTag)
 	req.Header.Add("Authorization", "Bearer "+accessToken)
 	req.Header.Add("Content-Type", "application/json")
@@ -360,3 +393,104 @@ func UpdateTaskWithChecklistItems(taskID, checklistStr string) error {
 	return nil
 }
 
+type TokenCached struct {
+	Token string
+}
+
+var TokenCache string
+
+func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) {
+	// Encode the body values into a URL-encoded format
+	body := bytes.NewBuffer(bodyValues)
+
+	// Create the request
+	req, err := http.NewRequest("POST", postUrl, body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the Content-Type header
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// Make the request
+	client := http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+func AuthGraphApi() (string, error) {
+	viper, err := viperConfig.InitViper("config.json")
+	if err != nil {
+		fmt.Printf("Error initializing viper: %v\n", err)
+		return "", errors.New("error initializing viper")
+	}
+
+	authAdress := "https://login.microsoftonline.com/a2728528-eff8-409c-a379-7d900c45d9ba/oauth2/token"
+
+	bodyValues := url.Values{}
+	bodyValues.Set("grant_type", viper.GetString("grant_type"))
+	bodyValues.Set("client_id", viper.GetString("M365managementAppClientId"))
+	bodyValues.Set("client_secret", viper.GetString("M365ManagementAppClientSecret"))
+	bodyValues.Set("resource", "https://graph.microsoft.com")
+	body := []byte(bodyValues.Encode())
+	// Make the POST request
+	resp, err := makePOSTRequest(authAdress, body)
+	if err != nil {
+		fmt.Printf("Error making POST request: %v\n", err)
+		return "", errors.New("error making POST request")
+	}
+	defer resp.Body.Close()
+
+	// Check the response status code
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Unexpected response status code: %d\n", resp.StatusCode)
+		return "", errors.New("unexpected response status code")
+	}
+
+	// Decode the response body
+	var tokenResponse map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
+		fmt.Printf("Error decoding response body: %v\n", err)
+		return "", errors.New("error decoding response body")
+	}
+
+	// Extract the access token
+	accessToken, ok := tokenResponse["access_token"].(string)
+	if !ok {
+		fmt.Println("Access token not found in response")
+		return "", errors.New("access token not found in response")
+	}
+	// Print the access token
+
+	return accessToken, nil
+
+}
+
+func GetTaskETag(taskID string) (string, error) {
+	url := fmt.Sprintf("https://graph.microsoft.com/v1.0/planner/tasks/%s/details", taskID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	accessToken, err := AuthGraphApi()
+	req.Header.Add("Authorization", "Bearer "+accessToken)
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// ETag is found in the "ETag" response
+
+	etag := resp.Header.Get("ETag")
+	if etag == "" {
+		return "", fmt.Errorf("ETag header not found in response")
+	}
+	return etag, nil
+}

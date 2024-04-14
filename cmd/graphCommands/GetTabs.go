@@ -6,7 +6,7 @@ package graphCommands
 import (
 	"fmt"
 
-	teamGov "github.com/GustavELinden/Tyr365AdminCli/cmd/teamGov"
+	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
 	models "github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
@@ -26,12 +26,12 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		body, err := teamGov.Get("GetGroups", map[string]string{"searchText": searchString})
+		body, err := teamGovHttp.Get("GetGroups", map[string]string{"searchText": searchString})
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
-		groups, err := teamGov.UnmarshalGroups(&body)
+		groups, err := teamGovHttp.UnmarshalGroups(&body)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
@@ -86,7 +86,7 @@ func init() {
 	GraphCmd.AddCommand(getTabsCmd)
 
 }
-func selectTeams(groups []teamGov.UnifiedGroup) ([]string, error) {
+func selectTeams(groups []teamGovHttp.UnifiedGroup) ([]string, error) {
 	var options []string
 	teamNameToGroupId := make(map[string]string) // Map to associate team names with their GroupIds
 
