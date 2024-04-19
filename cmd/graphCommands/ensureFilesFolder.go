@@ -1,65 +1,65 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
+// }
 package graphCommands
 
 import (
 	"fmt"
+	"sync"
 
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/spf13/cobra"
 )
+
 var groupId string
+
 // ensureFilesFolderCmd represents the ensureFilesFolder command
 var ensureFilesFolderCmd = &cobra.Command{
 	Use:   "ensureFilesFolder",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Ensure Files Folder is present in all channels of a given team",
+	Long:  `This command checks and ensures that a Files Folder is present in all channels of a specified team in Microsoft Teams.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		group, _ := graphHelper.GetGroupById(groupId)
+		teamId := group.GetId()
+		channels, _ := graphHelper.GetAllChannels(*teamId)
+		allChannels := channels.GetValue()
 
-	group, _ :=	graphHelper.GetGroupById(groupId)
-  teamId := group.GetId()
-	channels, _ := graphHelper.GetAllChannels(*teamId)
-	allChannels := channels.GetValue()
-for _, channel := range allChannels {
-	chanId := channel.GetId() // Declare with :=
-	chanTitle := channel.GetDisplayName() // Declare with :=
+		var wg sync.WaitGroup
+		errors := make(chan error, len(allChannels))
+		results := make(chan string, len(allChannels))
 
-	fmt.Println("Ensure files folders called for: " + *chanTitle)
+		for _, channel := range allChannels {
+			wg.Add(1)
+			go func(ch models.Channelable) {
+				defer wg.Done()
+				chanId := ch.GetId()
+				chanTitle := ch.GetDisplayName()
 
-	_, err := graphHelper.EnsureFilesFolder(*teamId, *chanId)
-	if err != nil {
-		fmt.Println("Error calling:", *chanTitle)
-		continue // Use continue to skip the current iteration on error
-	}
-	fmt.Println("Successfully made call")
+				fmt.Println("Ensure files folders called for: " + *chanTitle)
+				_, err := graphHelper.EnsureFilesFolder(*teamId, *chanId)
+				if err != nil {
+					errors <- fmt.Errorf("error calling %s: %v", *chanTitle, err)
+					return
+				}
+				results <- "Successfully made call for " + *chanTitle
+			}(channel)
+		}
+
+		wg.Wait()
+		close(errors)
+		close(results)
+
+		for err := range errors {
+			fmt.Println(err)
+		}
+		for res := range results {
+			fmt.Println(res)
+		}
+	},
 }
 
-   },
-	}
-
-
-
-
-
 func init() {
-		ensureFilesFolderCmd.Flags().StringVarP(&groupId, "groupId", "r", "", "The id of the group")
+	ensureFilesFolderCmd.Flags().StringVarP(&groupId, "groupId", "r", "", "The id of the group")
 	if err := ensureFilesFolderCmd.MarkFlagRequired("groupId"); err != nil {
 		fmt.Println(err)
 	}
 	GraphCmd.AddCommand(ensureFilesFolderCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// ensureFilesFolderCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// ensureFilesFolderCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

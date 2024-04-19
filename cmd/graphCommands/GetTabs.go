@@ -6,7 +6,7 @@ package graphCommands
 import (
 	"fmt"
 
-	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
+	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
 	models "github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
@@ -87,6 +87,7 @@ func init() {
 
 }
 func selectTeams(groups []teamGovHttp.UnifiedGroup) ([]string, error) {
+	
 	var options []string
 	teamNameToGroupId := make(map[string]string) // Map to associate team names with their GroupIds
 

@@ -326,8 +326,8 @@ func (g *GraphHelper) EnsureFilesFolder(teamId string, channelId string) (models
 	drive, nil := g.appClient.Teams().ByTeamId(teamId).Channels().ByChannelId(channelId).FilesFolder().Get(context.Background(), nil)
 	return drive, nil
 }
-func (g *GraphHelper) EnsureOneNote(teamId string, channelId string) (models.Onenoteable, error) {
-	Onenote, nil := g.appClient.Groups().ByGroupId(teamId).Onenote().Get(context.Background(), nil)
+func (g *GraphHelper) EnsureOneNote(teamId string, channelId string) (models.NotebookCollectionResponseable, error) {
+	Onenote, nil := g.appClient.Groups().ByGroupId(teamId).Onenote().Notebooks().Get(context.Background(), nil)
 	return Onenote, nil
 }
 func (g *GraphHelper) GetTabs(teamId string, channelId string) (models.TeamsTabCollectionResponseable, error) {

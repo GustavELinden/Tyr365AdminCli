@@ -212,7 +212,7 @@ func worker(wg *sync.WaitGroup, templateID int, requestsChan <-chan teamGovHttp.
 	}
 }
 
-func savedToFile(requests *[]teamGovHttp.Request) {
+func savedToFile(requests *teamGovHttp.RequestSlice) {
 	var fileName string
 	fmt.Println("Name your new excel file:")
 	fmt.Scanln(&fileName)
