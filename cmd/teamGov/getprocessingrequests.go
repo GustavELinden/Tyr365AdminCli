@@ -2,7 +2,8 @@ package teamGov
 
 import (
 	"fmt"
-	"github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
+
+	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
 	"github.com/spf13/cobra"
 )
 

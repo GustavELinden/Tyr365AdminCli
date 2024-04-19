@@ -6,10 +6,11 @@ package teamGov
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
+	"os"
+
+	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 // getprocessingjobsCmd represents the getprocessingjobs command
