@@ -87,7 +87,7 @@ func init() {
 
 }
 func selectTeams(groups []teamGovHttp.UnifiedGroup) ([]string, error) {
-	
+
 	var options []string
 	teamNameToGroupId := make(map[string]string) // Map to associate team names with their GroupIds
 

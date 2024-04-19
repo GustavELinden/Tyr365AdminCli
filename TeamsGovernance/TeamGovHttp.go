@@ -509,7 +509,8 @@ type RequestSlice []Request
 type Printer interface {
 	PrintTable()
 }
-func(r *RequestSlice) PrintTable(){
+
+func (r *RequestSlice) PrintTable() {
 
 	// Create a table to display the response data
 	table := tablewriter.NewWriter(os.Stdout)

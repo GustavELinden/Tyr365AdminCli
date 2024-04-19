@@ -14,6 +14,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	azurehelper "github.com/GustavELinden/Tyr365AdminCli/AzureHelper"
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
 	GraphHelper "github.com/GustavELinden/Tyr365AdminCli/graphHelper"
 	"github.com/pterm/pterm"
@@ -28,7 +30,8 @@ type MatchRequest struct {
 var taskList []string
 var deletedGroups []pterm.BulletListItem
 var graphHelper *GraphHelper.GraphHelper
-
+var metrics *azurehelper.MetricsResult
+	var avgProvTime string
 // dashboardCmd represents the dashboard command
 var dashboardCmd = &cobra.Command{
 	Use:   "dashboard",
@@ -43,6 +46,16 @@ to quickly create a Cobra application.`,
 
 		taskList, _ = graphHelper.GetAllTasks()
 		deletedGroups, _ = listDeletedGroups()
+		cred, err := azidentity.NewDefaultAzureCredential(nil)
+		if err != nil {
+
+		}
+		if cred != nil {
+			metrics, _ = azurehelper.GetMetrics()
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
 		drawDashboard()
 
 		c := make(chan os.Signal, 1)
@@ -98,6 +111,14 @@ func Initialize(graphHelper *GraphHelper.GraphHelper) {
 func drawDashboard() {
 	requests, _ := getprocessingjobs()
 
+		body, err := teamGovHttp.Get("AverageProvisionTime")
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+  avgProvTime = string(body)
+ 
 	// Prepare table data and render table
 	tableData := pterm.TableData{
 		{"RequestId", "TeamName", "EndPoint"},
@@ -124,18 +145,38 @@ func drawDashboard() {
 		}
 	}
 	section3List, _ := pterm.DefaultBulletList.WithItems(bulletListItems).Srender()
+
+	bulletListMetrics := []pterm.BulletListItem{
+		{Level: 0, Text: fmt.Sprintf("TeamGovernance avg responsetime: %f", metrics.AverageResponseTime)},
+		{Level: 0, Text: fmt.Sprintf("TeamGovernance Http5xx requests (1h): %f", metrics.Http5xxCount)},
+		{Level: 0, Text: fmt.Sprintf("TeamGovernance nr Requests (1h): %f", metrics.TotalRequests)},
+	}
+
+	section2ListMetrics, _ := pterm.DefaultBulletList.WithItems(bulletListMetrics).Srender()
+
 	section2List, _ := pterm.DefaultBulletList.WithItems(deletedGroups).Srender()
 	// Create Panels for side-by-side layout
+
 	panels := pterm.Panels{
 		// First Row of Panels
 		{
 			{Data: pterm.DefaultSection.Sprint("TeamGov Status:")},
+			{Data: pterm.DefaultSection.Sprint("TeamGov Metrics:")},
+			{Data: pterm.DefaultSection.Sprint("TeamGov Average provisioning time.")},
+		},
+		// Second Row of Panels
+		{
+			{Data: section2Table},
+			{Data: section2ListMetrics},
+			{Data: avgProvTime},
+		},
+		{
+
 			{Data: pterm.DefaultSection.Sprint("Not-started Todos")},
 			{Data: pterm.DefaultSection.Sprint("Deleted groups")},
 		},
 		// Second Row of Panels
 		{
-			{Data: section2Table},
 			{Data: section3List},
 			{Data: section2List},
 		},
