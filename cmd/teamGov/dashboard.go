@@ -14,8 +14,8 @@ import (
 	"syscall"
 	"time"
 
+	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
 	GraphHelper "github.com/GustavELinden/Tyr365AdminCli/graphHelper"
-	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/teamGovHttp"
 	"github.com/pterm/pterm"
 	"github.com/pterm/pterm/putils"
 	"github.com/spf13/cobra"

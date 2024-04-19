@@ -305,7 +305,7 @@ func QueryManaged(groupId, teamName, status, origin, retention, fields string) (
 	}
 
 	// Read and unmarshal the response body
-	var teams []teamGovHttp.ManagedTeam
+	var teams []ManagedTeam
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading response body: %w", err)
@@ -415,21 +415,21 @@ func PostWithBody(endpoint string, queryParams map[string]string, body interface
 }
 
 func UnmarshalRequests(body *[]byte) (RequestSlice, error) {
-	var requests []teamGovHttp.Request
+	var requests RequestSlice
 	err := json.Unmarshal(*body, &requests)
 	if err == nil {
 		return requests, nil
 	}
 
-	var request teamGovHttp.Request
+	var request Request
 	err = json.Unmarshal(*body, &request)
 	if err == nil {
-		return teamGovHttp.RequestSlice{request}, nil
+		return RequestSlice{request}, nil
 	}
 
 	return nil, fmt.Errorf("error unmarshalling to Request or []Request: %w", err)
 }
-func UnmarshalGroups(body *[]byte) ([]teamGovHttp.UnifiedGroup, error) {
+func UnmarshalGroups(body *[]byte) ([]UnifiedGroup, error) {
 	var groups []UnifiedGroup
 	err := json.Unmarshal(*body, &groups)
 	if err == nil {
@@ -444,7 +444,7 @@ func UnmarshalGroups(body *[]byte) ([]teamGovHttp.UnifiedGroup, error) {
 
 	return nil, fmt.Errorf("error unmarshalling to UnifiedGroup or []UnifiedGroup: %w", err)
 }
-func UnmarshalManagedTeams(body *[]byte) ([]teamGovHttp.ManagedTeam, error) {
+func UnmarshalManagedTeams(body *[]byte) ([]ManagedTeam, error) {
 	var managedTeam []ManagedTeam
 	err := json.Unmarshal(*body, &managedTeam)
 	if err == nil {
@@ -505,7 +505,7 @@ func GetTaskETag(taskID string) (string, error) {
 	return etag, nil
 }
 
-type RequestSlice []teamGovHttp.Request
+type RequestSlice []Request
 type Printer interface {
 	PrintTable()
 }
