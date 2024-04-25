@@ -335,6 +335,16 @@ func (g *GraphHelper) GetTabs(teamId string, channelId string) (models.TeamsTabC
 	return teamTabs, nil
 }
 
+// func (g *GraphHelper) DeleteVersionHistory()(){
+// 	drive, _ := g.appClient.Groups().ByGroupId("ssssssssds").Drive().Get(context.Background(), nil)
+// 	driveID :=drive.GetId()
+// 	items, _ := g.appClient.Drives().ByDriveId(*driveID).Items().Get(context.Background(), nil)
+// itemValues :=	items.GetValue()
+// for _, item := range itemValues {
+//  item.GetVersions()
+// }
+// }
+
 func UpdateTaskWithChecklistItems(taskID, checklistStr string) error {
 	// Split the checklistStr into individual titles
 	titles := strings.Split(checklistStr, ",")

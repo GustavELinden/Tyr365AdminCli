@@ -35,20 +35,15 @@ var metrics *azurehelper.MetricsResult
 // dashboardCmd represents the dashboard command
 var dashboardCmd = &cobra.Command{
 	Use:   "dashboard",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Renders a dashboard",
+	Long: `Renders a dashboard with statistics about the goverance API and todos for me`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		taskList, _ = graphHelper.GetAllTasks()
 		deletedGroups, _ = listDeletedGroups()
 		cred, err := azidentity.NewDefaultAzureCredential(nil)
 		if err != nil {
-
+    fmt.Print("Not logged into Azure. Metrics wont me used")
 		}
 		if cred != nil {
 			metrics, _ = azurehelper.GetMetrics()
@@ -110,31 +105,13 @@ func Initialize(graphHelper *GraphHelper.GraphHelper) {
 }
 func drawDashboard() {
 	requests, _ := getprocessingjobs()
-
-		body, err := teamGovHttp.Get("AverageProvisionTime")
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-
-  avgProvTime = string(body)
+  avgProvTime, _ := getAverageProcessingTime()
  
 	// Prepare table data and render table
-	tableData := pterm.TableData{
-		{"RequestId", "TeamName", "EndPoint"},
-	}
-
-	for _, req := range requests {
-		row := []string{
-			fmt.Sprintf("%d", req.ID),
-			req.TeamName,
-			req.Endpoint,
-		}
-		tableData = append(tableData, row)
-	}
+	tableData, _ := buildRequestDataTable(requests)
+	section2Table, _ := pterm.DefaultTable.WithHasHeader().WithData(tableData).Srender()
 	clearScreen() // Assuming you have this function ready
 
-	section2Table, _ := pterm.DefaultTable.WithHasHeader().WithData(tableData).Srender()
 
 	// Prepare bullet list
 	bulletListItems := []pterm.BulletListItem{}
@@ -146,19 +123,11 @@ func drawDashboard() {
 	}
 	section3List, _ := pterm.DefaultBulletList.WithItems(bulletListItems).Srender()
 
-	bulletListMetrics := []pterm.BulletListItem{
-		{Level: 0, Text: fmt.Sprintf("TeamGovernance avg responsetime: %f", metrics.AverageResponseTime)},
-		{Level: 0, Text: fmt.Sprintf("TeamGovernance Http5xx requests (1h): %f", metrics.Http5xxCount)},
-		{Level: 0, Text: fmt.Sprintf("TeamGovernance nr Requests (1h): %f", metrics.TotalRequests)},
-	}
-
-	section2ListMetrics, _ := pterm.DefaultBulletList.WithItems(bulletListMetrics).Srender()
+	section2ListMetrics, _ := buildAndRenderMetrics()
 
 	section2List, _ := pterm.DefaultBulletList.WithItems(deletedGroups).Srender()
-	// Create Panels for side-by-side layout
 
 	panels := pterm.Panels{
-		// First Row of Panels
 		{
 			{Data: pterm.DefaultSection.Sprint("TeamGov Status:")},
 			{Data: pterm.DefaultSection.Sprint("TeamGov Metrics:")},
@@ -167,7 +136,7 @@ func drawDashboard() {
 		// Second Row of Panels
 		{
 			{Data: section2Table},
-			{Data: section2ListMetrics},
+			{Data: *section2ListMetrics},
 			{Data: avgProvTime},
 		},
 		{
@@ -197,7 +166,7 @@ func drawDashboard() {
 	_ = panelPrinter.Render()
 }
 
-func getprocessingjobs() ([]teamGovHttp.Request, error) {
+func getprocessingjobs() (teamGovHttp.RequestSlice, error) {
 	body, err := teamGovHttp.Get("GetProcessingJobs")
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -257,4 +226,44 @@ func listDeletedGroups() ([]pterm.BulletListItem, error) {
 		}
 	}
 	return bulletListItems, nil
+}
+
+func getAverageProcessingTime()(string, error){
+		body, err := teamGovHttp.Get("AverageProvisionTime")
+		if err != nil {
+			fmt.Println("Error:", err)
+		return	 "", err 
+		}
+
+ return string(body), nil
+}
+
+func buildRequestDataTable(requests teamGovHttp.RequestSlice)(pterm.TableData, error){
+tableData :=	pterm.TableData{
+		{"RequestId", "TeamName", "EndPoint"},
+	}
+
+	for _, req := range requests {
+		row := []string{
+			fmt.Sprintf("%d", req.ID),
+			req.TeamName,
+			req.Endpoint,
+		}
+		tableData = append(tableData, row)
+	}
+	return tableData, nil
+}
+
+func buildAndRenderMetrics()(*string, error){
+		bulletListMetrics := []pterm.BulletListItem{
+		{Level: 0, Text: fmt.Sprintf("TeamGovernance avg responsetime: %f", metrics.AverageResponseTime)},
+		{Level: 0, Text: fmt.Sprintf("TeamGovernance Http5xx requests (1h): %f", metrics.Http5xxCount)},
+		{Level: 0, Text: fmt.Sprintf("TeamGovernance nr Requests (1h): %f", metrics.TotalRequests)},
+	}
+
+	section2ListMetrics, err := pterm.DefaultBulletList.WithItems(bulletListMetrics).Srender()
+	if err != nil {
+  return nil, err
+	}
+	return &section2ListMetrics, nil
 }
