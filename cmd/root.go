@@ -9,6 +9,7 @@ import (
 
 	"github.com/GustavELinden/Tyr365AdminCli/cmd/azure"
 	"github.com/GustavELinden/Tyr365AdminCli/cmd/graphCommands"
+	"github.com/GustavELinden/Tyr365AdminCli/cmd/sp"
 	"github.com/GustavELinden/Tyr365AdminCli/cmd/teamGov"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -51,6 +52,7 @@ func init() {
 	// will be global for your application.
 	//Add my subCommand palette here
 	// rootCmd.AddCommand(interactiveCmd)
+	rootCmd.AddCommand(sp.SpCmd)
 	rootCmd.AddCommand(teamGov.TeamGovCmd)
 	rootCmd.AddCommand(graphCommands.GraphCmd)
 	rootCmd.AddCommand(azure.AzureCmd)
