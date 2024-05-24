@@ -133,7 +133,11 @@ func (g *GraphHelper) GetDeletedGroups() ([]bmodels.Groupable, error) {
 	groups := graphGroups.GetValue()
 	return groups, nil
 }
+// func (g *GraphHelper) GetDewwwletedGroups(teamId string , channelId string) ([]bmodels.Groupable, error) {
+// 	archived  := g.betaClient.Teams().ByTeamId(teamId).Channels().ByChannelId(channelId).Archive().Post(context.Background(), nil)
 
+// 	return archived, nil
+// }
 func (g *GraphHelper) GetUsers(selectProperties []string, amount *int32, filter string) (models.UserCollectionResponseable, error) {
 	var topValue int32
 	if amount == nil {
@@ -204,33 +208,6 @@ func (g *GraphHelper) GetAllTasks() ([]string, error) {
 	return taskTitles, nil
 }
 
-// func (g *GraphHelper) CreateTaskWithChecklist(title string, checklistStr string) (models.PlannerTaskable, error) {
-
-// requestBody := models.NewPlannerTaskDetails()
-// previewType := models.NOPREVIEW_PLANNERPREVIEWTYPE
-// requestBody.SetPreviewType(&previewType)
-// 	viper, _ := viperConfig.InitViper("config.json")
-// 	planId := viper.GetString("planId")
-// 	bucketId := viper.GetString("bucketId")
-// 	newTask := models.NewPlannerTask()
-// 	newTask.SetPlanId(&planId)
-// 	newTask.SetBucketId(&bucketId)
-// 	newTask.SetTitle(&title)
-//   assignments := models.NewPlannerAssignments()
-
-//   newTask.SetAssignments(assignments)
-// 	task, err := g.appClient.Planner().Tasks().Post(context.Background(), newTask, nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	taskID := task.GetId()
-// err = UpdateTaskWithChecklistItems(*taskID, checklistStr)
-// if err != nil {
-// 	fmt.Println("Error: ", err)
-// }
-// return task, nil
-
-// }
 func (g *GraphHelper) CreateTaskWithChecklist(title, checklistStr string) (string, error) {
 	viper, err := viperConfig.InitViper("config.json")
 
@@ -334,16 +311,6 @@ func (g *GraphHelper) GetTabs(teamId string, channelId string) (models.TeamsTabC
 	teamTabs, nil := g.appClient.Teams().ByTeamId(teamId).Channels().ByChannelId(channelId).Tabs().Get(context.Background(), nil)
 	return teamTabs, nil
 }
-
-// func (g *GraphHelper) DeleteVersionHistory()(){
-// 	drive, _ := g.appClient.Groups().ByGroupId("ssssssssds").Drive().Get(context.Background(), nil)
-// 	driveID :=drive.GetId()
-// 	items, _ := g.appClient.Drives().ByDriveId(*driveID).Items().Get(context.Background(), nil)
-// itemValues :=	items.GetValue()
-// for _, item := range itemValues {
-//  item.GetVersions()
-// }
-// }
 
 func UpdateTaskWithChecklistItems(taskID, checklistStr string) error {
 	// Split the checklistStr into individual titles

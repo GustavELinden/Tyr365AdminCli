@@ -104,12 +104,27 @@ func Initialize(graphHelper *GraphHelper.GraphHelper) {
 	}
 }
 func drawDashboard() {
-	requests, _ := getprocessingjobs()
+	//Get all querys, rewrite this laters to filter out requests instead of querying them
+	requests, _ := getRequestItems("GetProcessingJobs")
   avgProvTime, _ := getAverageProcessingTime()
- 
-	// Prepare table data and render table
+  tyraRequestErrors, _ := teamGovHttp.GetQuery("GetFailedRequests", map[string]string{"callerID": "Tyra"})
+	MgmtAppRequestErrors, _ := teamGovHttp.GetQuery("GetFailedRequests", map[string]string{"callerID": "MgmtApp"})
+	GovPortalRequestErrors, _ := teamGovHttp.GetQuery("GetFailedRequests", map[string]string{"callerID": "GovPortal"})
+	// Unmarshal all responses
+	tyrErrors, _ := teamGovHttp.UnmarshalRequests(&tyraRequestErrors)
+	mgmtAppErrors, _ := teamGovHttp.UnmarshalRequests(&MgmtAppRequestErrors)
+	govPortalErrors, _ := teamGovHttp.UnmarshalRequests(&GovPortalRequestErrors)
+	//Build tables
 	tableData, _ := buildRequestDataTable(requests)
+	tableDataTyra, _ := buildRequestDataTable(tyrErrors)
+	tableDataMgmtApp, _ := buildRequestDataTable(mgmtAppErrors)
+	tableDataGovPortal, _ := buildRequestDataTable(govPortalErrors)
+	//render Tables
 	section2Table, _ := pterm.DefaultTable.WithHasHeader().WithData(tableData).Srender()
+	section2TableTyra, _ := pterm.DefaultTable.WithHasHeader().WithData(tableDataTyra).Srender()
+	section2TableMgmtApp, _ := pterm.DefaultTable.WithHasHeader().WithData(tableDataMgmtApp).Srender()
+	section2TableGovPortal, _ := pterm.DefaultTable.WithHasHeader().WithData(tableDataGovPortal).Srender()
+
 	clearScreen() // Assuming you have this function ready
 
 
@@ -131,9 +146,9 @@ func drawDashboard() {
 		{
 			{Data: pterm.DefaultSection.Sprint("TeamGov Status:")},
 			{Data: pterm.DefaultSection.Sprint("TeamGov Metrics:")},
-			{Data: pterm.DefaultSection.Sprint("TeamGov Average provisioning time.")},
+			{Data: pterm.DefaultSection.Sprint("TeamGov avg prov time.")},
 		},
-		// Second Row of Panels
+	
 		{
 			{Data: section2Table},
 			{Data: *section2ListMetrics},
@@ -143,17 +158,30 @@ func drawDashboard() {
 
 			{Data: pterm.DefaultSection.Sprint("Not-started Todos")},
 			{Data: pterm.DefaultSection.Sprint("Deleted groups")},
+			
 		},
 		// Second Row of Panels
 		{
 			{Data: section3List},
 			{Data: section2List},
 		},
+		{
+
+			{Data: pterm.DefaultSection.Sprint("Tyra provisioning Errors")},
+			{Data: pterm.DefaultSection.Sprint("MgmtApp provisioning Errors")},
+						{Data: pterm.DefaultSection.Sprint("GovPortal provisioning Errors")},
+			
+		},
+		{
+		{Data: section2TableTyra},
+		{Data: section2TableMgmtApp},
+		{Data: section2TableGovPortal},
+		},
 	}
 
 	// Adjust PanelPrinter settings if necessary to better fit your content
-	panelPrinter := pterm.DefaultPanel.WithPanels(panels).WithPadding(20)
-	panelPrinter.Padding = 20
+	panelPrinter := pterm.DefaultPanel.WithPanels(panels).WithPadding(5)
+	panelPrinter.Padding = 5
 	panelPrinter.SameColumnWidth = true
 
 	ptermLogo, _ := pterm.DefaultBigText.WithLetters(
@@ -166,8 +194,8 @@ func drawDashboard() {
 	_ = panelPrinter.Render()
 }
 
-func getprocessingjobs() (teamGovHttp.RequestSlice, error) {
-	body, err := teamGovHttp.Get("GetProcessingJobs")
+func getRequestItems(adress string) (teamGovHttp.RequestSlice, error) {
+	body, err := teamGovHttp.Get(adress)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil, err
@@ -179,6 +207,20 @@ func getprocessingjobs() (teamGovHttp.RequestSlice, error) {
 	}
 	return requests, nil
 }
+
+// func processRequests(body []byte) (teamGovHttp.RequestSlice, error) {
+// 	body, err := teamGovHttp.Get("GetProcessingJobs")
+// 	if err != nil {
+// 		fmt.Println("Error:", err)
+// 		return nil, err
+// 	}
+// 	requests, err := teamGovHttp.UnmarshalRequests(&body)
+// 	if err != nil {
+// 		fmt.Println("Error:", err)
+// 		return nil, err
+// 	}
+// 	return requests, nil
+// }
 
 func listDeletedGroups() ([]pterm.BulletListItem, error) {
 	groups, err := graphHelper.GetDeletedGroups()
@@ -221,9 +263,7 @@ func listDeletedGroups() ([]pterm.BulletListItem, error) {
 		if team.Origin == "Tyra" && team.Retention == "Forever" {
 			bpoint := pterm.BulletListItem{Level: 0, Text: team.TeamName + " is from " + team.Origin + " and needs to be discussed"}
 			bulletListItems = append(bulletListItems, bpoint)
-		} else {
-			fmt.Println(team.TeamName + " is from " + team.Origin + " and does not need to be restored")
-		}
+		} 
 	}
 	return bulletListItems, nil
 }

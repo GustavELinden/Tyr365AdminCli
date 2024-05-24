@@ -11,6 +11,7 @@ import (
 	"github.com/GustavELinden/Tyr365AdminCli/cmd/graphCommands"
 	"github.com/GustavELinden/Tyr365AdminCli/cmd/sp"
 	"github.com/GustavELinden/Tyr365AdminCli/cmd/teamGov"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -28,8 +29,11 @@ examples and usage of using your application. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
+PersistentPreRun: func(cmd *cobra.Command, args []string) {
+        logFile, _ := cmd.Flags().GetString("log")
+	
+        logger.SetupLogging(logFile)
+    },
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("365Admin")
 	},
@@ -47,22 +51,19 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-	//Add my subCommand palette here
-	// rootCmd.AddCommand(interactiveCmd)
 	rootCmd.AddCommand(sp.SpCmd)
 	rootCmd.AddCommand(teamGov.TeamGovCmd)
 	rootCmd.AddCommand(graphCommands.GraphCmd)
 	rootCmd.AddCommand(azure.AzureCmd)
+	    rootCmd.PersistentFlags().StringP("log", "l", "", "Log to a file")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config.json)")
 	rootCmd.PersistentFlags().BoolVarP(&Output, "output", "o", false, "Ensures that the selected command is output to the standard outout.")
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
+  
 }
+
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {

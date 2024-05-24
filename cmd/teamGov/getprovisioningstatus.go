@@ -15,6 +15,7 @@ var getprovisioningstatusCmd = &cobra.Command{
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
+		
 		body, err := teamGovHttp.Get("GetProvisioningStatus", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
 		if err != nil {
 			fmt.Println("Error:", err)
