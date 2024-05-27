@@ -4,9 +4,9 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package teamGov
 
 import (
-	"fmt"
-
 	saveToFile "github.com/GustavELinden/Tyr365AdminCli/SaveToFile"
+	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -21,15 +21,21 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
+		logger := logging.GetLogger()
 		//if flag --file is used, delete the file
 		if cmd.Flag("file").Changed {
 			err := saveToFile.DeleteFile(fileName)
 			if err != nil {
-				fmt.Printf("Error deleting file: %s\n", err)
+				logger.WithFields(log.Fields{
+					"method": "Delete File",
+					"status": "Error",
+				}).Error("Error deleting file: %s\n", err)
 				return
 			}
-			fmt.Println("File deleted successfully")
+			logger.WithFields(log.Fields{
+				"method": "Delete File",
+				"status": "Success",
+			}).Info("File deleted")
 		}
 	},
 }

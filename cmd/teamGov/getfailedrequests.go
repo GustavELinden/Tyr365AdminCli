@@ -5,8 +5,9 @@ import (
 
 	saveToFile "github.com/GustavELinden/Tyr365AdminCli/SaveToFile"
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
-
+	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
 	"github.com/pterm/pterm"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -21,14 +22,25 @@ var getfailedrequestsCmd = &cobra.Command{
 		You specify the source by using the flag --callerID. For example: 365Admin teamGov getfailedrequests --callerID "Tyra".
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := logging.GetLogger()
 		response, err := teamGovHttp.Get("GetFailedRequests", map[string]string{"callerID": callerID})
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":      "/api/teams/GetFailedRequests",
+				"method":   "GET",
+				"status":   "Error",
+				"CallerID": callerID,
+			}).Error("error retrivering failed requests")
 			return
 		}
 		requests, errs := teamGovHttp.UnmarshalRequests(&response)
 		if errs != nil {
-			fmt.Println("Error:", errs)
+			logger.WithFields(log.Fields{
+				"url":      "/api/teams/GetFailedRequests",
+				"method":   "GET",
+				"status":   "Error",
+				"CallerID": callerID,
+			}).Error(errs)
 			return
 		}
 
@@ -48,10 +60,19 @@ var getfailedrequestsCmd = &cobra.Command{
 
 			err := saveToFile.SaveDataToJSONFile(requests, fileName+".json")
 			if err != nil {
-				fmt.Printf("Error saving data to JSON file: %s\n", err)
+				logger.WithFields(log.Fields{
+
+					"method": "SaveDataTOJsonFile",
+					"status": "Error",
+				}).Error(err)
+
 				return
 			}
-			fmt.Println("Data successfully saved to JSON file:", fileName+".json")
+			logger.WithFields(log.Fields{
+
+				"method": "SaveDataToJsonFile",
+				"status": "Success",
+			}).Error("Data successfully saved to JSON file:", fileName+".json")
 		}
 		if cmd.Flag("interactive").Changed {
 			requeueSelectedTeams(requests)

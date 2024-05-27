@@ -7,6 +7,8 @@ import (
 	"fmt"
 
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
+	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -17,15 +19,20 @@ var getaverageprovisioningtimeCmd = &cobra.Command{
 	Long: `This command gets the average provisioning time in the Teams Governance API. For example: 365Admin teamGov getaverageprovisioningtime
 	The time is an average of the time it takes from when a request is queued (Created time) to when it is succeeded (Modified time) `,
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := logging.GetLogger()
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
 		body, err := teamGovHttp.Get("AverageProvisionTime")
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/AverageProvisiovTime",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
-		fmt.Println("Raw response:", string(body))
+		fmt.Println("", string(body))
 	},
 }
 

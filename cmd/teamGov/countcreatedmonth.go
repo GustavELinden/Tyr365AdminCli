@@ -5,9 +5,11 @@ package teamGov
 
 import (
 	"encoding/json"
-	"fmt"
 
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
+	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/spf13/cobra"
 )
 
@@ -19,17 +21,30 @@ var countcreatedmonthCmd = &cobra.Command{
 	Long: `Returns the number of requests created in the current month. For example: 365Admin teamGov countcreatedmonth
 	The endpoints counted against are the following: Create, ApplySPTemplate, ApplyTeamTemplate, Group`,
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := logging.GetLogger()
 		numbm, err := teamGovHttp.Get("CountEntriesMonth")
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/CountEntriesMonth",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
 		errAtParsing := json.Unmarshal(numbm, &Createdmonth)
 		if errAtParsing != nil {
-			fmt.Println("Error:", errAtParsing)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/CountEntriesMonth",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
-		fmt.Println(Createdmonth)
+		logger.WithFields(log.Fields{
+			"url":    "/api/teams/CountEntriesMonth",
+			"method": "GET",
+			"status": "Error",
+		}).Info(Createdmonth)
 	},
 }
 

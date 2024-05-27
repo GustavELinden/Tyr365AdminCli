@@ -1,7 +1,8 @@
 package teamGov
 
 import (
-	"fmt"
+	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
+	log "github.com/sirupsen/logrus"
 
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
 	"github.com/spf13/cobra"
@@ -13,21 +14,34 @@ var getprocessingrequestsCmd = &cobra.Command{
 	Short: "Get the number of processing requests in the Teams Governance API.",
 	Long:  `This command gets the number of processing requests in the Teams Governance API. For example: 365Admin teamGov getprocessingrequests`,
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := logging.GetLogger()
 		//If flag --help is used, print the help message
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
 		body, err := teamGovHttp.Get("GetProcessingRequests")
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/GetProcessingRequests",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
 		requests, err := teamGovHttp.UnmarshalInteger(&body)
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/GetProcessingRequests",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
-		fmt.Println(requests)
+		logger.WithFields(log.Fields{
+			"url":    "/api/teams/GetProcessingRequests",
+			"method": "GET",
+			"status": "Success",
+		}).Info(requests)
 	},
 }
 

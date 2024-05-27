@@ -61,34 +61,51 @@ func AuthGovernanceApi() (string, error) {
 	// Make the POST request
 	resp, err := makePOSTRequest(authAdress, body)
 	if err != nil {
-	            logger.WithFields(log.Fields{
-            "url":    "/api/teams/AddFieldToSite",
-            "method": "Get",
-            "status": "success",
-						"queryparameters": queryParams["alias"],
-        }).Info("error making POST request")
-               
+		logger.WithFields(log.Fields{
+			"url":             authAdress,
+			"method":          "POST",
+			"status":          "Error",
+			"queryparameters": bodyValues,
+		}).Error("error making POST request")
+
 		return "", errors.New("error making POST request")
 	}
 	defer resp.Body.Close()
 
 	// Check the response status code
 	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("Unexpected response status code: %d\n", resp.StatusCode)
+		logger.WithFields(log.Fields{
+			"url":             authAdress,
+			"method":          "POST",
+			"status":          "Error",
+			"statusCode":      resp.StatusCode,
+			"queryparameters": bodyValues,
+		}).Error("error making POST request")
 		return "", errors.New("unexpected response status code")
 	}
 
 	// Decode the response body
 	var tokenResponse map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
-		fmt.Printf("Error decoding response body: %v\n", err)
+		logger.WithFields(log.Fields{
+			"url":             authAdress,
+			"method":          "POST",
+			"error":           err,
+			"status":          "Error",
+			"queryparameters": bodyValues,
+		}).Error("error decoding token")
 		return "", errors.New("error decoding response body")
 	}
 
 	// Extract the access token
 	accessToken, ok := tokenResponse["access_token"].(string)
 	if !ok {
-		fmt.Println("Access token not found in response")
+		logger.WithFields(log.Fields{
+			"url":             authAdress,
+			"method":          "POST",
+			"status":          "Error",
+			"queryparameters": bodyValues,
+		}).Error("Token was empty")
 		return "", errors.New("access token not found in response")
 	}
 	// Print the access token
@@ -96,6 +113,7 @@ func AuthGovernanceApi() (string, error) {
 	return accessToken, nil
 }
 func AuthGraphApi() (string, error) {
+	logger := logging.GetLogger()
 	viper, err := viperConfig.InitViper("config.json")
 	if err != nil {
 		fmt.Printf("Error initializing viper: %v\n", err)
@@ -113,28 +131,51 @@ func AuthGraphApi() (string, error) {
 	// Make the POST request
 	resp, err := makePOSTRequest(authAdress, body)
 	if err != nil {
-		fmt.Printf("Error making POST request: %v\n", err)
+		logger.WithFields(log.Fields{
+			"url":             authAdress,
+			"method":          "POST",
+			"status":          "Error",
+			"queryparameters": bodyValues,
+		}).Error("Token was empty")
 		return "", errors.New("error making POST request")
 	}
 	defer resp.Body.Close()
 
 	// Check the response status code
 	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("Unexpected response status code: %d\n", resp.StatusCode)
+		logger.WithFields(log.Fields{
+			"url":             authAdress,
+			"method":          "POST",
+			"status":          resp.Status,
+			"statusCode":      resp.StatusCode,
+			"queryparameters": bodyValues,
+		}).Error("Statuscode indicates error")
 		return "", errors.New("unexpected response status code")
 	}
 
 	// Decode the response body
 	var tokenResponse map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
-		fmt.Printf("Error decoding response body: %v\n", err)
+		logger.WithFields(log.Fields{
+			"url":    authAdress,
+			"method": "POST",
+			"status": resp.Status,
+
+			"queryparameters": bodyValues,
+		}).Error("could not decode token")
 		return "", errors.New("error decoding response body")
 	}
 
 	// Extract the access token
 	accessToken, ok := tokenResponse["access_token"].(string)
 	if !ok {
-		fmt.Println("Access token not found in response")
+		logger.WithFields(log.Fields{
+			"url":             authAdress,
+			"method":          "POST",
+			"status":          resp.Status,
+			"statusCode":      resp.StatusCode,
+			"queryparameters": bodyValues,
+		}).Error("token was empty")
 		return "", errors.New("access token not found in response")
 	}
 	// Print the access token

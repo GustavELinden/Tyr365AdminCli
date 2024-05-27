@@ -4,9 +4,9 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package teamGov
 
 import (
-	"fmt"
-
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
+	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -23,6 +23,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := logging.GetLogger()
 		queryParams := make(map[string]string)
 		if date != "" {
 			queryParams["date"] = date
@@ -30,13 +31,22 @@ to quickly create a Cobra application.`,
 
 		body, err := teamGovHttp.Get("GetRequestsForDay", queryParams)
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/GetRequestsForDay",
+				"method": "GET",
+				"status": "Error",
+				"query":  queryParams,
+			}).Error(err)
 			return
 		}
 		requests, err := teamGovHttp.UnmarshalRequests(&body)
 
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/GetRequestsForDay",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
 		renderRequests(requests)
@@ -47,14 +57,4 @@ to quickly create a Cobra application.`,
 func init() {
 	GetRequestsByDayCmd.Flags().StringVarP(&date, "date", "d", "", "Date in fashion YYYY/MM/DD")
 	TeamGovCmd.AddCommand(GetRequestsByDayCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// GetRequestsByDayCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// GetRequestsByDayCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

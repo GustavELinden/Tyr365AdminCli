@@ -5,9 +5,11 @@ package teamGov
 
 import (
 	"encoding/json"
-	"fmt"
 
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
+	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/spf13/cobra"
 )
 
@@ -20,17 +22,30 @@ var countcreatedweekCmd = &cobra.Command{
 	Long: `This command counts the number of created requests in the Teams Governance API for the current week. For example: 365Admin teamGov countcreatedweek
 	The endpoints counted against are the following: Create, ApplySPTemplate, ApplyTeamTemplate, Group`,
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := logging.GetLogger()
 		numbm, err := teamGovHttp.Get("CountEntriesWeek")
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/CountEntriesWeek",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
 		errAtParsing := json.Unmarshal(numbm, &Createdweek)
 		if errAtParsing != nil {
-			fmt.Println("Error:", errAtParsing)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/CountEntriesWeek",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
-		fmt.Println(Createdweek)
+		logger.WithFields(log.Fields{
+			"url":    "/api/teams/CountEntriesWeek",
+			"method": "GET",
+			"status": "Success",
+		}).Info(Createdweek)
 	},
 }
 

@@ -1,9 +1,9 @@
 package teamGov
 
 import (
-	"fmt"
-
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
+	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -13,20 +13,33 @@ var countqueuedjobsCmd = &cobra.Command{
 	Short: "counts how many jobs are queued in the Teams Governance API.",
 	Long:  `This command counts how many jobs are queued in the Teams Governance API. For example: 365Admin teamGov countqueuedjobs`,
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := logging.GetLogger()
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
 		body, err := teamGovHttp.Get("CountQueuedJobs")
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/CountQueuedJobs",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
 		resp, err := teamGovHttp.UnmarshalInteger(&body)
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/CountQueuedJobs",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
-		fmt.Println("Number of queued jobs: %s ", resp)
+		logger.WithFields(log.Fields{
+			"url":    "/api/teams/CountQueuedJobs",
+			"method": "GET",
+			"status": "Success",
+		}).Info("Number of queued jobs: %s ", resp)
 	},
 }
 

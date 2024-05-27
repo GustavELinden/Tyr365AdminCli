@@ -5,6 +5,7 @@ import (
 
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
 	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -21,15 +22,27 @@ var getprovisioningstatusCmd = &cobra.Command{
 
 		body, err := teamGovHttp.Get("GetProvisioningStatus", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
 		if err != nil {
-			logger.Warn(err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/GetProvisioningStatus",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
 		requests, err := teamGovHttp.UnmarshalRequests(&body)
 		if err != nil {
-			logger.Warn(err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/GetProvisioningStatus",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
-
+		logger.WithFields(log.Fields{
+			"url":    "/api/teams/GetProvisioningStatus",
+			"method": "GET",
+			"status": "Success",
+		}).Info(err)
 		ViewTable(&requests)
 	},
 }
