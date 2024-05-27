@@ -24,6 +24,7 @@ var cfgFile string
 var Output bool
 var logFilePath string
 var debug bool
+var useJSON bool
 var (
 	fileLog bool
 )
@@ -41,9 +42,9 @@ to quickly create a Cobra application.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if fileLog {
 			today := time.Now().Format("06-01-02.json") // yy-mm-dd.json format
-			logging.SetupLogging(today, true)           // Setup logging to JSON file named with today's date
+			logging.SetupLogging(today, useJSON)           // Setup logging to JSON file named with today's date
 		} else {
-			logging.SetupLogging("", false) // Setup default logging to stdout in text format
+			logging.SetupLogging("", useJSON) // Setup default logging to stdout in text format
 		}
 	},
 
@@ -62,21 +63,20 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+ cobra.OnInitialize(initConfig)
 
-	rootCmd.AddCommand(sp.SpCmd)
-	rootCmd.AddCommand(teamGov.TeamGovCmd)
-	rootCmd.AddCommand(graphCommands.GraphCmd)
-	rootCmd.AddCommand(azure.AzureCmd)
-	rootCmd.PersistentFlags().StringVarP(&logFilePath, "log", "l", "", "Log to a file")
-	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "verbose logging")
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config.json)")
-	rootCmd.PersistentFlags().BoolVarP(&Output, "output", "o", false, "Ensures that the selected command is output to the standard outout.")
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.PersistentFlags().BoolVarP(&fileLog, "fileLog", "f", false, "Log to a JSON file named with today's date")
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	// logger.SetupLogging(logFilePath)
+    rootCmd.AddCommand(sp.SpCmd)
+    rootCmd.AddCommand(teamGov.TeamGovCmd)
+    rootCmd.AddCommand(graphCommands.GraphCmd)
+    rootCmd.AddCommand(azure.AzureCmd)
+    
+    rootCmd.PersistentFlags().StringVarP(&logFilePath, "log", "l", "", "Specify the log file path")
+    rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Enable verbose logging")
+    rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Specify config file (default is $HOME/.config.json)")
+    rootCmd.PersistentFlags().BoolVarP(&Output, "stdout", "s", false, "Output to standard output")
+    rootCmd.PersistentFlags().BoolVarP(&useJSON, "json", "j", false, "Output logs in JSON format")
+    rootCmd.PersistentFlags().BoolVarP(&fileLog, "fileLog", "f", false, "Log to a JSON file named with today's date")
+    rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 }
 

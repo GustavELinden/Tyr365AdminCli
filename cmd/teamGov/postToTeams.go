@@ -25,11 +25,11 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-				logger := logging.GetLogger()
+		logger := logging.GetLogger()
 		var webhookURL = `https://lindendevelop.webhook.office.com/webhookb2/26aa87f9-9e27-4017-9ab4-fa925d1bce3e@fd6c9945-d5d1-423c-acf9-2a5431314398/IncomingWebhook/e9abe5737f5c42a39f22d96401bcf802/527d6a2e-8ddd-4d17-993d-99aad9a74283`
 
 		if err := postMessageToTeamsWebhook(webhookURL, "Hello from the CLI!"); err != nil {
-		logger.WithFields(log.Fields{
+			logger.WithFields(log.Fields{
 				"url":    webhookURL,
 				"method": "POST",
 				"status": "Error",

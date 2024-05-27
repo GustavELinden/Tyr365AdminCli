@@ -10,7 +10,9 @@ import (
 
 	saveToFile "github.com/GustavELinden/Tyr365AdminCli/SaveToFile"
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
+	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
 	"github.com/olekukonko/tablewriter"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -30,6 +32,7 @@ Example usage:
 teamGov querymanaged --groupId "12345" --teamName "MyTeam" --status "active" --origin "internal" --retention "permanent" --fields "Id,teamName,status"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Processing flags and constructing query parameters map
+			logger := logging.GetLogger()
 		queryParams := make(map[string]string)
 		if groupId != "" {
 			queryParams["groupId"] = groupId
@@ -52,14 +55,23 @@ teamGov querymanaged --groupId "12345" --teamName "MyTeam" --status "active" --o
 		// Get the response from the API
 		body, err := teamGovHttp.GetQuery("QueryManagedTeams", queryParams)
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/QueryManagedTeams",
+				"method": "GET",
+				"status": "Error",
+				"queryParams": queryParams,
+			}).Error(err)
 			return
 		}
 		// Unmarshal (deserialize for C# people) the response
 		managedTeams, err := teamGovHttp.UnmarshalManagedTeams(&body)
 
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/QueryManagedTeams",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
 
@@ -79,10 +91,19 @@ teamGov querymanaged --groupId "12345" --teamName "MyTeam" --status "active" --o
 
 			err := saveToFile.SaveDataToJSONFile(managedTeams, fileName+".json")
 			if err != nil {
-				fmt.Printf("Error saving data to JSON file: %s\n", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/QueryManagedTeams",
+				"method": "SaveDataToJsonFile",
+				"status": "Error",
+			}).Error(err)
 				return
 			}
-			fmt.Println("Data successfully saved to JSON file:", fileName+".json")
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/QueryManagedTeams",
+				"method": "GET",
+				"status": "Success",
+			}).Info("Successfulle got ")
+
 		}
 		if err != nil {
 			fmt.Println("Error:", err)

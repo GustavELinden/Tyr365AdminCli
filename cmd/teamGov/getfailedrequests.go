@@ -51,7 +51,7 @@ var getfailedrequestsCmd = &cobra.Command{
 			saveToFile.SaveToExcel(requests, fileName)
 		}
 		if cmd.Flag("print").Changed {
-			renderRequests(requests)
+			ViewTable(&requests)
 		}
 		if cmd.Flag("json").Changed {
 			var fileName string

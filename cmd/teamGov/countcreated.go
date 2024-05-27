@@ -41,7 +41,7 @@ var countcreatedCmd = &cobra.Command{
 			"url":    "/api/teams/CountEntriesYear",
 			"method": "GET",
 			"status": "Success",
-		}).Info(err)
+		}).Info(CreatedYear)
 	},
 }
 

@@ -3,12 +3,12 @@ package teamGov
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
 
 	saveToFile "github.com/GustavELinden/Tyr365AdminCli/SaveToFile"
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
-	"github.com/olekukonko/tablewriter"
+	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +42,7 @@ var queryCmd = &cobra.Command{
     --templateID: Template ID to filter the requests -- Assuming there's a sensible default or 0 indicates "use default". This command should not be used with --print or --excel
         .`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Processing flags and constructing query parameters map
+		logger := logging.GetLogger()
 		queryParams := make(map[string]string)
 		if endpoint != "" {
 			queryParams["endpoint"] = endpoint
@@ -68,13 +68,22 @@ var queryCmd = &cobra.Command{
 
 		body, err := teamGovHttp.GetQuery("CliQuery", queryParams)
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/CliQuery",
+				"method": "GET",
+				"status": "Error",
+				"query":  queryParams,
+			}).Error(err)
 			return
 		}
 		requests, err := teamGovHttp.UnmarshalRequests(&body)
 
 		if err != nil {
-			fmt.Println("Error:", err)
+			logger.WithFields(log.Fields{
+				"url":    "/api/teams/CliQuery",
+				"method": "GET",
+				"status": "Error",
+			}).Error(err)
 			return
 		}
 
@@ -96,16 +105,34 @@ var queryCmd = &cobra.Command{
 
 			err := saveToFile.SaveDataToJSONFile(&requests, fileName+".json")
 			if err != nil {
-				fmt.Printf("Error saving data to JSON file: %s\n", err)
+				logger.WithFields(log.Fields{
+				"url":    "/api/teams/CliQuery",
+				"method": "GET",
+				"status": "Error",
+				"query":  queryParams,
+			}).Error(err)
 				return
 			}
-			fmt.Println("Data successfully saved to JSON file:", fileName+".json")
+				logger.WithFields(log.Fields{
+				"url":    "/api/teams/CliQuery",
+				"method": "GET",
+				"status": "Succeeded",
+				"query":  queryParams,
+			}).Info("Data successfully saved to JSON file:", fileName+".json")
+
 		}
 		if cmd.Flag("print").Changed {
-			renderRequests(requests)
+			ViewTable(&requests)
+
 		}
 		if err != nil {
-			fmt.Println("Error:", err)
+				logger.WithFields(log.Fields{
+				"url":    "/api/teams/CliQuery",
+				"method": "GET",
+				"status": "Error",
+				"query":  queryParams,
+			}).Error(err)
+
 			return
 		}
 
@@ -128,34 +155,6 @@ func init() {
 	// queryCmd.Flags().StringVarP(&jqQuery, "jq", "j", "", "jq query to filter the JSON output")
 	queryCmd.Flags().IntVarP(&templateID, "templateID", "T", 0, "Template ID to filter the requests")
 	TeamGovCmd.AddCommand(queryCmd)
-}
-func renderRequests(requests []teamGovHttp.Request) {
-	// Reflect the slice to work with its elements
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Endpoint", "CallerID", "Status", "ProvisioningStep", "Message", "InitiatedBy", "Modified", "RetryCount", "QueuePriority"}) // Customize the table header as needed
-
-	// Populate the table with data from the response
-	for _, req := range requests {
-		row := []string{
-			fmt.Sprintf("%d", req.ID),
-			req.Created,
-			req.GroupID,
-			req.TeamName,
-			req.Endpoint,
-			req.CallerID,
-			req.Status,
-			req.ProvisioningStep,
-			req.Message,
-			req.InitiatedBy,
-			req.Modified,
-			fmt.Sprintf("%v", req.RetryCount),
-			fmt.Sprintf("%d", req.QueuePriority),
-		}
-		table.Append(row)
-	}
-
-	// Render the table
-	table.Render()
 }
 
 func RunGORutine(requests []teamGovHttp.Request, templateID int) {
@@ -188,21 +187,26 @@ func RunGORutine(requests []teamGovHttp.Request, templateID int) {
 	close(requestsChan) // Signal workers that no more requests are coming
 
 	// Collect and process matching requests
-	var matchedRequests []teamGovHttp.Request
+	var matchedRequests teamGovHttp.RequestSlice
 	for req := range resultsChan {
 		matchedRequests = append(matchedRequests, req)
 	}
 
-	renderRequests(matchedRequests)
+	ViewTable(&matchedRequests)
 }
 
 func worker(wg *sync.WaitGroup, templateID int, requestsChan <-chan teamGovHttp.Request, resultsChan chan<- teamGovHttp.Request) {
-
+	logger := logging.GetLogger()
 	defer wg.Done()
 	for req := range requestsChan {
 		var params teamGovHttp.Parameters
 		if err := json.Unmarshal([]byte(req.Parameters), &params); err != nil {
-			fmt.Printf("Error unmarshaling Parameters for request ID %d: %v\n", req.ID, err)
+				logger.WithFields(log.Fields{
+				"url":    "/api/teams/CliQuery",
+				"method": "GET",
+				"status": "Error",
+			
+			}).Error("Error unmarshaling Parameters for request ID %d: %v\n", req.ID, err)
 			continue
 		}
 

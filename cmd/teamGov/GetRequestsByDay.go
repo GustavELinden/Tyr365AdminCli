@@ -49,7 +49,7 @@ to quickly create a Cobra application.`,
 			}).Error(err)
 			return
 		}
-		renderRequests(requests)
+		ViewTable(&requests)
 
 	},
 }
