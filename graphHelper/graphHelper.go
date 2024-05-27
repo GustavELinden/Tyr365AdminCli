@@ -133,11 +133,12 @@ func (g *GraphHelper) GetDeletedGroups() ([]bmodels.Groupable, error) {
 	groups := graphGroups.GetValue()
 	return groups, nil
 }
+
 // func (g *GraphHelper) GetDewwwletedGroups(teamId string , channelId string) ([]bmodels.Groupable, error) {
 // 	archived  := g.betaClient.Teams().ByTeamId(teamId).Channels().ByChannelId(channelId).Archive().Post(context.Background(), nil)
 
-// 	return archived, nil
-// }
+//		return archived, nil
+//	}
 func (g *GraphHelper) GetUsers(selectProperties []string, amount *int32, filter string) (models.UserCollectionResponseable, error) {
 	var topValue int32
 	if amount == nil {

@@ -9,6 +9,8 @@ import (
 	"net/url"
 
 	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
+	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
+	log "github.com/sirupsen/logrus"
 )
 
 type TokenCached struct {
@@ -41,6 +43,8 @@ func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) 
 }
 
 func AuthGovernanceApi() (string, error) {
+	logger := logging.GetLogger()
+
 	viper, err := viperConfig.InitViper("config.json")
 	if err != nil {
 		fmt.Printf("Error initializing viper: %v\n", err)
@@ -57,7 +61,13 @@ func AuthGovernanceApi() (string, error) {
 	// Make the POST request
 	resp, err := makePOSTRequest(authAdress, body)
 	if err != nil {
-		fmt.Printf("Error making POST request: %v\n", err)
+	            logger.WithFields(log.Fields{
+            "url":    "/api/teams/AddFieldToSite",
+            "method": "Get",
+            "status": "success",
+						"queryparameters": queryParams["alias"],
+        }).Info("error making POST request")
+               
 		return "", errors.New("error making POST request")
 	}
 	defer resp.Body.Close()

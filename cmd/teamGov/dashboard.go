@@ -31,19 +31,20 @@ var taskList []string
 var deletedGroups []pterm.BulletListItem
 var graphHelper *GraphHelper.GraphHelper
 var metrics *azurehelper.MetricsResult
-	var avgProvTime string
+var avgProvTime string
+
 // dashboardCmd represents the dashboard command
 var dashboardCmd = &cobra.Command{
 	Use:   "dashboard",
 	Short: "Renders a dashboard",
-	Long: `Renders a dashboard with statistics about the goverance API and todos for me`,
+	Long:  `Renders a dashboard with statistics about the goverance API and todos for me`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		taskList, _ = graphHelper.GetAllTasks()
 		deletedGroups, _ = listDeletedGroups()
 		cred, err := azidentity.NewDefaultAzureCredential(nil)
 		if err != nil {
-    fmt.Print("Not logged into Azure. Metrics wont me used")
+			fmt.Print("Not logged into Azure. Metrics wont me used")
 		}
 		if cred != nil {
 			metrics, _ = azurehelper.GetMetrics()
@@ -106,8 +107,8 @@ func Initialize(graphHelper *GraphHelper.GraphHelper) {
 func drawDashboard() {
 	//Get all querys, rewrite this laters to filter out requests instead of querying them
 	requests, _ := getRequestItems("GetProcessingJobs")
-  avgProvTime, _ := getAverageProcessingTime()
-  tyraRequestErrors, _ := teamGovHttp.GetQuery("GetFailedRequests", map[string]string{"callerID": "Tyra"})
+	avgProvTime, _ := getAverageProcessingTime()
+	tyraRequestErrors, _ := teamGovHttp.GetQuery("GetFailedRequests", map[string]string{"callerID": "Tyra"})
 	MgmtAppRequestErrors, _ := teamGovHttp.GetQuery("GetFailedRequests", map[string]string{"callerID": "MgmtApp"})
 	GovPortalRequestErrors, _ := teamGovHttp.GetQuery("GetFailedRequests", map[string]string{"callerID": "GovPortal"})
 	// Unmarshal all responses
@@ -126,7 +127,6 @@ func drawDashboard() {
 	section2TableGovPortal, _ := pterm.DefaultTable.WithHasHeader().WithData(tableDataGovPortal).Srender()
 
 	clearScreen() // Assuming you have this function ready
-
 
 	// Prepare bullet list
 	bulletListItems := []pterm.BulletListItem{}
@@ -148,7 +148,7 @@ func drawDashboard() {
 			{Data: pterm.DefaultSection.Sprint("TeamGov Metrics:")},
 			{Data: pterm.DefaultSection.Sprint("TeamGov avg prov time.")},
 		},
-	
+
 		{
 			{Data: section2Table},
 			{Data: *section2ListMetrics},
@@ -158,7 +158,6 @@ func drawDashboard() {
 
 			{Data: pterm.DefaultSection.Sprint("Not-started Todos")},
 			{Data: pterm.DefaultSection.Sprint("Deleted groups")},
-			
 		},
 		// Second Row of Panels
 		{
@@ -169,13 +168,12 @@ func drawDashboard() {
 
 			{Data: pterm.DefaultSection.Sprint("Tyra provisioning Errors")},
 			{Data: pterm.DefaultSection.Sprint("MgmtApp provisioning Errors")},
-						{Data: pterm.DefaultSection.Sprint("GovPortal provisioning Errors")},
-			
+			{Data: pterm.DefaultSection.Sprint("GovPortal provisioning Errors")},
 		},
 		{
-		{Data: section2TableTyra},
-		{Data: section2TableMgmtApp},
-		{Data: section2TableGovPortal},
+			{Data: section2TableTyra},
+			{Data: section2TableMgmtApp},
+			{Data: section2TableGovPortal},
 		},
 	}
 
@@ -263,23 +261,23 @@ func listDeletedGroups() ([]pterm.BulletListItem, error) {
 		if team.Origin == "Tyra" && team.Retention == "Forever" {
 			bpoint := pterm.BulletListItem{Level: 0, Text: team.TeamName + " is from " + team.Origin + " and needs to be discussed"}
 			bulletListItems = append(bulletListItems, bpoint)
-		} 
+		}
 	}
 	return bulletListItems, nil
 }
 
-func getAverageProcessingTime()(string, error){
-		body, err := teamGovHttp.Get("AverageProvisionTime")
-		if err != nil {
-			fmt.Println("Error:", err)
-		return	 "", err 
-		}
+func getAverageProcessingTime() (string, error) {
+	body, err := teamGovHttp.Get("AverageProvisionTime")
+	if err != nil {
+		fmt.Println("Error:", err)
+		return "", err
+	}
 
- return string(body), nil
+	return string(body), nil
 }
 
-func buildRequestDataTable(requests teamGovHttp.RequestSlice)(pterm.TableData, error){
-tableData :=	pterm.TableData{
+func buildRequestDataTable(requests teamGovHttp.RequestSlice) (pterm.TableData, error) {
+	tableData := pterm.TableData{
 		{"RequestId", "TeamName", "EndPoint"},
 	}
 
@@ -294,8 +292,8 @@ tableData :=	pterm.TableData{
 	return tableData, nil
 }
 
-func buildAndRenderMetrics()(*string, error){
-		bulletListMetrics := []pterm.BulletListItem{
+func buildAndRenderMetrics() (*string, error) {
+	bulletListMetrics := []pterm.BulletListItem{
 		{Level: 0, Text: fmt.Sprintf("TeamGovernance avg responsetime: %f", metrics.AverageResponseTime)},
 		{Level: 0, Text: fmt.Sprintf("TeamGovernance Http5xx requests (1h): %f", metrics.Http5xxCount)},
 		{Level: 0, Text: fmt.Sprintf("TeamGovernance nr Requests (1h): %f", metrics.TotalRequests)},
@@ -303,7 +301,7 @@ func buildAndRenderMetrics()(*string, error){
 
 	section2ListMetrics, err := pterm.DefaultBulletList.WithItems(bulletListMetrics).Srender()
 	if err != nil {
-  return nil, err
+		return nil, err
 	}
 	return &section2ListMetrics, nil
 }

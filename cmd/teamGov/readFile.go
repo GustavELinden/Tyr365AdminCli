@@ -12,10 +12,11 @@ import (
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
 	"github.com/spf13/cobra"
 )
+
 type ApiResponse struct {
-    StatusCode    int    `json:"statusCode"`
-   
+	StatusCode int `json:"statusCode"`
 }
+
 var fileName string
 
 // readFileCmd represents the readFile command
@@ -36,10 +37,10 @@ to quickly create a Cobra application.`,
 			outData, _ := json.Marshal(readGroups)
 			fmt.Println(string(outData))
 		}
-   if cmd.Flag("updateCT").Changed {
-   updateContenTypes(readGroups)
-}
-},
+		if cmd.Flag("updateCT").Changed {
+			updateContenTypes(readGroups)
+		}
+	},
 }
 
 func init() {
@@ -48,44 +49,42 @@ func init() {
 	TeamGovCmd.AddCommand(readFileCmd)
 }
 
-func updateContenTypes(readGroups interface{}){
-     outData, _ := json.Marshal(readGroups)
-        requests, err := teamGovHttp.UnmarshalRequests(&outData)
-        if err != nil {
-            fmt.Println(err)
-            return
-        }
+func updateContenTypes(readGroups interface{}) {
+	outData, _ := json.Marshal(readGroups)
+	requests, err := teamGovHttp.UnmarshalRequests(&outData)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-        // Create a channel to limit the number of concurrent goroutines
-        semaphore := make(chan struct{}, 5)
+	// Create a channel to limit the number of concurrent goroutines
+	semaphore := make(chan struct{}, 5)
 
-        var wg sync.WaitGroup
-        for _, group := range requests {
-            wg.Add(1)
-            semaphore <- struct{}{} // Acquire a token
+	var wg sync.WaitGroup
+	for _, group := range requests {
+		wg.Add(1)
+		semaphore <- struct{}{} // Acquire a token
 
-            // Start a new goroutine for each group
-            go func(group teamGovHttp.Request) {
-               defer wg.Done()
-                defer func() { <-semaphore }()
+		// Start a new goroutine for each group
+		go func(group teamGovHttp.Request) {
+			defer wg.Done()
+			defer func() { <-semaphore }()
 
-                queryParams := make(map[string]string)
-                queryParams["groupId"] = group.GroupID
-                _, err := teamGovHttp.Get("SetContentTypesToEditOnSite", queryParams)
-                
-                if err != nil {
-                    fmt.Printf("Failed to process group %s: %v\n", group.GroupID, err)
-                    return
-                }
+			queryParams := make(map[string]string)
+			queryParams["groupId"] = group.GroupID
+			_, err := teamGovHttp.Get("SetContentTypesToEditOnSite", queryParams)
 
-                
-                    fmt.Printf("Successfully processed group %s\n", group.GroupID)
-                
-                
-            }(group)
-        }
+			if err != nil {
+				fmt.Printf("Failed to process group %s: %v\n", group.GroupID, err)
+				return
+			}
 
-        // Wait for all goroutines to complete
-        wg.Wait()
-	
+			fmt.Printf("Successfully processed group %s\n", group.GroupID)
+
+		}(group)
+	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
 }

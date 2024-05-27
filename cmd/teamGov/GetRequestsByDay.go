@@ -9,7 +9,9 @@ import (
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
 	"github.com/spf13/cobra"
 )
+
 var date string
+
 // GetRequestsByDayCmd represents the GetRequestsByDay command
 var GetRequestsByDayCmd = &cobra.Command{
 	Use:   "GetRequestsByDay",
@@ -21,23 +23,23 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-			queryParams := make(map[string]string)
+		queryParams := make(map[string]string)
 		if date != "" {
 			queryParams["date"] = date
 		}
-		
+
 		body, err := teamGovHttp.Get("GetRequestsForDay", queryParams)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
-			requests, err := teamGovHttp.UnmarshalRequests(&body)
+		requests, err := teamGovHttp.UnmarshalRequests(&body)
 
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
-			renderRequests(requests)
+		renderRequests(requests)
 
 	},
 }

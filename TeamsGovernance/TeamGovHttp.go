@@ -14,15 +14,17 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+// var logen *logger.CustomLogger
 var TokenCache string
 
 func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) {
-	// Encode the body values into a URL-encoded format
+
 	body := bytes.NewBuffer(bodyValues)
 
 	// Create the request
 	req, err := http.NewRequest("POST", postUrl, body)
 	if err != nil {
+
 		return nil, err
 	}
 

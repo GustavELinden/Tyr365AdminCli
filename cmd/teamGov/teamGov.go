@@ -15,6 +15,7 @@ var TeamGovCmd = &cobra.Command{
 	Short: "teamGov is a palett that contains commands to manage the Teams Governance API.",
 	Long: `teamGov is a palett that contains commands to manage the Teams Governance API. 
 	For example: 365Admin teamGov countprocessingjobs`,
+
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
