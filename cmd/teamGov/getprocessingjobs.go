@@ -44,7 +44,7 @@ var getprocessingjobsCmd = &cobra.Command{
 			return
 		}
 		//    RenderData(requests)
-		if cmd.Flag("output").Changed {
+		if cmd.Flag("showData").Changed {
 			outData, _ := json.Marshal(requests)
 			fmt.Println(string(outData))
 		} else {
@@ -56,34 +56,11 @@ var getprocessingjobsCmd = &cobra.Command{
 
 func init() {
 
+
+	getprocessingjobsCmd.Flags().Bool("showData", false, "Prints the table")
+	TeamGovCmd.AddCommand(readFileCmd)
+
 	TeamGovCmd.AddCommand(getprocessingjobsCmd)
 
 }
 
-// func RenderData(requests []teamGovHttp.Request) {
-// 	table := tablewriter.NewWriter(os.Stdout)
-// 	table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Endpoint", "CallerID", "Status", "ProvisioningStep", "Message", "InitiatedBy", "Modified"}) // Customize the table header as needed
-
-// 	// Populate the table with data from the response
-// 	for _, req := range requests {
-// 		row := []string{
-// 			fmt.Sprintf("%d", req.ID),
-// 			req.Created,
-// 			req.GroupID,
-// 			req.TeamName,
-// 			req.Endpoint,
-// 			req.CallerID,
-// 			req.Status,
-// 			req.ProvisioningStep,
-// 			req.Message,
-// 			req.InitiatedBy,
-// 			req.Modified,
-// 			fmt.Sprintf("%v", req.RetryCount),
-// 			fmt.Sprintf("%d", req.QueuePriority),
-// 		}
-// 		table.Append(row)
-// 	}
-
-// 	// Render the table
-// 	table.Render()
-// }

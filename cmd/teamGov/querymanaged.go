@@ -6,12 +6,10 @@ package teamGov
 
 import (
 	"fmt"
-	"os"
 
 	saveToFile "github.com/GustavELinden/Tyr365AdminCli/SaveToFile"
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
 	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
-	"github.com/olekukonko/tablewriter"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -82,7 +80,8 @@ teamGov querymanaged --groupId "12345" --teamName "MyTeam" --status "active" --o
 			saveToFile.SaveToExcel(managedTeams, fileName)
 		}
 		if cmd.Flag("print").Changed {
-			renderManagedTeams(&managedTeams)
+			ViewTable(&managedTeams)
+
 		}
 		if cmd.Flag("json").Changed {
 			var fileName string
@@ -127,25 +126,25 @@ func init() {
 
 }
 
-func renderManagedTeams(managed *[]teamGovHttp.ManagedTeam) {
-	// Reflect the slice to work with its elements
+// func renderManagedTeams(managed *teamGovHttp.ManagedTeamSlice) {
+// 	// Reflect the slice to work with its elements
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"GroupId", "TeamName", "Status", "Origin", "Retention"}) // Customize the table header as needed
+// 	table := tablewriter.NewWriter(os.Stdout)
+// 	table.SetHeader([]string{"GroupId", "TeamName", "Status", "Origin", "Retention"}) // Customize the table header as needed
 
-	// Populate the table with data from the response
-	for _, req := range *managed {
-		row := []string{
-			// fmt.Sprintf("%d", req.Id),
-			req.GroupId,
-			req.TeamName,
-			req.Status,
-			req.Origin,
-			req.Retention,
-		}
-		table.Append(row)
-	}
+// 	// Populate the table with data from the response
+// 	for _, req := range *managed {
+// 		row := []string{
+// 			// fmt.Sprintf("%d", req.Id),
+// 			req.GroupId,
+// 			req.TeamName,
+// 			req.Status,
+// 			req.Origin,
+// 			req.Retention,
+// 		}
+// 		table.Append(row)
+// 	}
 
-	// Render the table
-	table.Render()
-}
+// 	// Render the table
+// 	table.Render()
+// }

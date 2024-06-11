@@ -39,7 +39,7 @@ var countqueuedjobsCmd = &cobra.Command{
 			"url":    "/api/teams/CountQueuedJobs",
 			"method": "GET",
 			"status": "Success",
-		}).Info("Number of queued jobs: %s ", resp)
+		}).Infof("Number of queued jobs: %d ", resp)
 	},
 }
 

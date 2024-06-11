@@ -3,7 +3,10 @@ package teamGov
 import (
 	"fmt"
 
+	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
+
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -13,12 +16,18 @@ var retryRequestCmd = &cobra.Command{
 	Short: "This command requeues a request in the Teams Governance API. Flag : --requestId number",
 	Long:  `This command requeues a request in the Teams Governance API. For example: 365Admin teamGov retryRequest --requestId 147999`,
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := logging.GetLogger()
+
 		if cmd.Flag("help").Changed {
 			cmd.Help()
 		}
 		body, err := teamGovHttp.Post("RetryRequest", map[string]string{"requestId": fmt.Sprintf("%d", requestId)})
 		if err != nil {
-			fmt.Println(err)
+		logger.WithFields(log.Fields{
+				"url":    "/api/teams/RetryRequest",
+				"method": "POST",
+				"status": "Error",
+			}).Error(err)
 		}
 
 		fmt.Println(string(body))

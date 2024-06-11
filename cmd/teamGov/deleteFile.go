@@ -29,7 +29,7 @@ to quickly create a Cobra application.`,
 				logger.WithFields(log.Fields{
 					"method": "Delete File",
 					"status": "Error",
-				}).Error("Error deleting file: %s\n", err)
+				}).Errorf("Error deleting file: %s\n", err)
 				return
 			}
 			logger.WithFields(log.Fields{

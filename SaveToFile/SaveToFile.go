@@ -97,6 +97,7 @@ func ReadDataFromJSONFile(filename string, data interface{}) error {
 
 	// fmt.Printf("Data successfully read from %s:\n", filename)
 	// fmt.Println(string(prettyJSON))
+	fmt.Print("Successfully read file")
 	return nil
 }
 

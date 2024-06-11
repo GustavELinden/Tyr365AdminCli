@@ -11,7 +11,9 @@ import (
 	"os"
 
 	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
+	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
 	"github.com/olekukonko/tablewriter"
+	log "github.com/sirupsen/logrus"
 )
 
 // var logen *logger.CustomLogger
@@ -180,6 +182,7 @@ func Get(endpoint string, queryParams ...map[string]string) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Errors: %s", err)
 		return nil, fmt.Errorf("unexpected response status: %s", resp.Status)
 	}
 
@@ -365,6 +368,76 @@ func Post(endpoint string, queryParams map[string]string) ([]byte, error) {
 
 	return response, nil
 }
+
+// postSharePointUrl makes an HTTP POST request to a predefined URL with a JSON body containing the SharePoint URL.
+func PostSharePointUrl(sharePointUrl string) error {
+    // Define the URL to which the POST request will be sent.
+		logger := logging.GetLogger()
+    url := "https://teamgovexchangehandler.azurewebsites.net/api/removeRetention?code=uCvRtiR7c4uwFapJMzR-2vCXOlemR9kBY4dd0-01b0gDAzFu7SHRWA== "
+
+    // Create a map to hold the JSON payload.
+    payload := map[string]string{
+        "sharePointUrl": sharePointUrl,
+    }
+
+    // Marshal the map into a JSON object.
+    jsonData, err := json.Marshal(payload)
+    if err != nil {
+        logger.WithFields(log.Fields{
+				"url":    "/AzureFunction/removeRetention",
+				"method": "Post",
+				"status": "Error",
+	
+			}).Error(err)
+        return err
+    }
+
+    // Create a new HTTP request with the JSON data.
+    req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+    if err != nil {
+         logger.WithFields(log.Fields{
+				"url":    "/AzureFunction/removeRetention",
+				"method": "Post",
+				"status": "Error",
+	
+			}).Error(err)
+        return err
+    }
+
+    // Set the Content-Type header to indicate JSON payload.
+    req.Header.Set("Content-Type", "application/json")
+
+    // Create a new HTTP client and execute the request.
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+          logger.WithFields(log.Fields{
+				"url":    "/AzureFunction/removeRetention",
+				"method": "Post",
+				"status": "Error",
+	
+			}).Error(err)
+        return err
+    }
+    defer resp.Body.Close()
+
+    // Check if the HTTP request was successful.
+    if resp.StatusCode != http.StatusOK {
+			  logger.WithFields(log.Fields{
+				"url":    "/AzureFunction/removeRetention",
+				"method": "Post",
+				"status": "Error",
+	
+			}).Errorf("Received non-OK HTTP status: %s", resp.Status)
+      
+        return fmt.Errorf("received non-OK HTTP status: %s", resp.Status)
+    }
+
+    // Optionally, handle the response data.
+    return nil
+}
+
+
 func PostWithBody(endpoint string, queryParams map[string]string, body interface{}) ([]byte, error) {
 	viper, err := viperConfig.InitViper("config.json")
 	if err != nil {
@@ -431,7 +504,7 @@ func UnmarshalRequests(body *[]byte) (RequestSlice, error) {
 
 	return nil, fmt.Errorf("error unmarshalling to Request or []Request: %w", err)
 }
-func UnmarshalGroups(body *[]byte) ([]UnifiedGroup, error) {
+func UnmarshalGroups(body *[]byte) (UnifiedGroupSlice, error) {
 	var groups []UnifiedGroup
 	err := json.Unmarshal(*body, &groups)
 	if err == nil {
@@ -446,7 +519,18 @@ func UnmarshalGroups(body *[]byte) ([]UnifiedGroup, error) {
 
 	return nil, fmt.Errorf("error unmarshalling to UnifiedGroup or []UnifiedGroup: %w", err)
 }
-func UnmarshalManagedTeams(body *[]byte) ([]ManagedTeam, error) {
+
+func UnmarshalGroup(body *[]byte) (UnifiedGroup, error) {
+	var group UnifiedGroup
+	err := json.Unmarshal(*body, &group)
+
+ if err != nil {
+	return group, err
+ }
+ return group, nil
+}
+
+func UnmarshalManagedTeams(body *[]byte) (ManagedTeamSlice, error) {
 	var managedTeam []ManagedTeam
 	err := json.Unmarshal(*body, &managedTeam)
 	if err == nil {

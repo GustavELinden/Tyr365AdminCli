@@ -40,7 +40,7 @@ var AddFieldToSiteCmd = &cobra.Command{
 				"method":          "Get",
 				"status":          "success",
 				"queryparameters": queryParams["alias"],
-			}).Info("Successfully added field to site %s\n", alias)
+			}).Infof("Successfully added field to site %s\n", alias)
 
 		}
 	},
