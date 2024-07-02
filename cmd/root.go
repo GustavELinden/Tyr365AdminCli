@@ -69,7 +69,7 @@ func init() {
     rootCmd.AddCommand(teamGov.TeamGovCmd)
     rootCmd.AddCommand(graphCommands.GraphCmd)
     rootCmd.AddCommand(azure.AzureCmd)
-    
+    rootCmd.AddCommand(teamToolboxCmd.teamToolBoxCmd)
     // rootCmd.PersistentFlags().StringVarP(&logFilePath, "log", "l", "", "Specify the log file path")
     // rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Enable verbose logging")
     rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Specify config file (default is $HOME/.config.json)")

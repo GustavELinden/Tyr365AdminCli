@@ -313,6 +313,15 @@ func (g *GraphHelper) GetTabs(teamId string, channelId string) (models.TeamsTabC
 	return teamTabs, nil
 }
 
+func (g *GraphHelper) GetTeamsInstalledApps (teamId string) (models.TeamsAppInstallationCollectionResponseable, error){
+ installedApps, err := g.appClient.Teams().ByTeamId(teamId).InstalledApps().Get(context.Background(), nil)
+ if err != nil {
+  return nil, err
+ }
+
+ return installedApps, nil
+}
+
 func UpdateTaskWithChecklistItems(taskID, checklistStr string) error {
 	// Split the checklistStr into individual titles
 	titles := strings.Split(checklistStr, ",")
