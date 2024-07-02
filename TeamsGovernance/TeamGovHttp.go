@@ -373,7 +373,7 @@ func Post(endpoint string, queryParams map[string]string) ([]byte, error) {
 func PostSharePointUrl(sharePointUrl string) error {
     // Define the URL to which the POST request will be sent.
 		logger := logging.GetLogger()
-    url := "https://teamgovexchangehandler.azurewebsites.net/api/removeRetention?code=uCvRtiR7c4uwFapJMzR-2vCXOlemR9kBY4dd0-01b0gDAzFu7SHRWA== "
+    url := ""
 
     // Create a map to hold the JSON payload.
     payload := map[string]string{
