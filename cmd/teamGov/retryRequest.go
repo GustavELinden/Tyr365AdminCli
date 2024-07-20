@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
+	log "github.com/sirupsen/logrus"
 
 	teamGovHttp "github.com/GustavELinden/Tyr365AdminCli/TeamsGovernance"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 

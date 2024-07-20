@@ -6,13 +6,14 @@ package teamToolboxCmd
 import (
 	"fmt"
 
+	teamToolboxHelper "github.com/GustavELinden/Tyr365AdminCli/TeamToolBoxHelper"
 	"github.com/spf13/cobra"
 )
 
-// teamToolboxCmd represents the teamToolbox command
-var TeamToolboxCmd = &cobra.Command{
-	Use:   "teamToolbox",
-	Short: "A brief description of your command",
+// getRulesAndLogicCmd represents the getRulesAndLogic command
+var getRulesAndLogicCmd = &cobra.Command{
+	Use:   "getRulesAndLogic",
+	Short: "Displays current Rules and logic from Verktygslådan",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -20,19 +21,30 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("teamToolbox called")
+		client , err :=	teamToolboxHelper.CreateClient()
+if err != nil {
+	fmt.Println(err)
+}
+
+response, err := client.GetRulesAndLogic()
+if err != nil {
+	fmt.Println(err)
+	return 
+}
+ViewTable(response)
 	},
 }
 
 func init() {
+	TeamToolboxCmd.AddCommand(getRulesAndLogicCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// teamToolboxCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// getRulesAndLogicCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// teamToolboxCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// getRulesAndLogicCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

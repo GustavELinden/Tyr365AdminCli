@@ -373,7 +373,7 @@ func Post(endpoint string, queryParams map[string]string) ([]byte, error) {
 func PostSharePointUrl(sharePointUrl string) error {
     // Define the URL to which the POST request will be sent.
 		logger := logging.GetLogger()
-    url := ""
+    url := "https://github.com/GustavELinden/Tyr365AdminCli/security/secret-scanning/unblock-secret/2igdI04NqFYw9qo0dFVP8uiIGNj"
 
     // Create a map to hold the JSON payload.
     payload := map[string]string{

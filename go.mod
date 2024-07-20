@@ -17,6 +17,8 @@ require (
 	github.com/xuri/excelize/v2 v2.8.1
 )
 
+require golang.org/x/oauth2 v0.21.0 // indirect
+
 require (
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/keyboard v0.2.9 // indirect
