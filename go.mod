@@ -12,12 +12,12 @@ require (
 	github.com/microsoftgraph/msgraph-sdk-go v1.41.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pterm/pterm v0.12.79
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.18.2
 	github.com/xuri/excelize/v2 v2.8.1
 )
 
-require golang.org/x/oauth2 v0.21.0 // indirect
+require golang.org/x/oauth2 v0.21.0
 
 require (
 	atomicgo.dev/cursor v0.2.0 // indirect
@@ -60,7 +60,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/std-uritemplate/std-uritemplate/go v0.0.57 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect

@@ -25,7 +25,6 @@ func SaveToExcel(data interface{}, fileName string) error {
 	if sliceVal.Len() == 0 {
 		return fmt.Errorf("Empty slice provided")
 	}
-
 	// Use reflection on the first element to generate headers based on struct fields
 	firstElem := sliceVal.Index(0)
 	headers := make([]string, firstElem.NumField())

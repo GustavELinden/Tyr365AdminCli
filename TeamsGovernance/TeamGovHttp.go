@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
+	"time"
 
 	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
 	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
@@ -17,7 +19,12 @@ import (
 )
 
 // var logen *logger.CustomLogger
-var TokenCache string
+type apiToken struct {
+	Token     string
+	ExpiresAt time.Time
+}
+
+var tokenCache = make(map[string]apiToken)
 
 func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) {
 
@@ -49,13 +56,19 @@ func AuthGovernanceApi() (string, error) {
 		fmt.Printf("Error initializing viper: %v\n", err)
 		return "", errors.New("error initializing viper")
 	}
+	resource := viper.GetString("resource")
+
+	if token, found := tokenCache[resource]; found && time.Now().Before(token.ExpiresAt) {
+		return token.Token, nil
+	}
+
 	authAdress := "https://login.microsoftonline.com/a2728528-eff8-409c-a379-7d900c45d9ba/oauth2/token"
 
 	bodyValues := url.Values{}
 	bodyValues.Set("grant_type", viper.GetString("grant_type"))
 	bodyValues.Set("client_id", viper.GetString("client_id"))
 	bodyValues.Set("client_secret", viper.GetString("client_secret"))
-	bodyValues.Set("resource", viper.GetString("resource"))
+	bodyValues.Set("resource", resource)
 	body := []byte(bodyValues.Encode())
 	// Make the POST request
 	resp, err := makePOSTRequest(authAdress, body)
@@ -84,7 +97,20 @@ func AuthGovernanceApi() (string, error) {
 		fmt.Println("Access token not found in response")
 		return "", errors.New("access token not found in response")
 	}
-	// Print the access token
+
+	expiresInStr, ok := tokenResponse["expires_in"].(string)
+	if !ok {
+		return "", errors.New("could not parse expires_in from token response")
+	}
+	expiresIn, err := strconv.Atoi(expiresInStr)
+	if err != nil {
+		return "", fmt.Errorf("could not convert expires_in to integer: %w", err)
+	}
+
+	tokenCache[resource] = apiToken{
+		Token:     accessToken,
+		ExpiresAt: time.Now().Add(time.Second * time.Duration(expiresIn)),
+	}
 
 	return accessToken, nil
 }
@@ -94,6 +120,11 @@ func AuthGraphApi() (string, error) {
 		fmt.Printf("Error initializing viper: %v\n", err)
 		return "", errors.New("error initializing viper")
 	}
+	resource := "https://graph.microsoft.com"
+
+	if token, found := tokenCache[resource]; found && time.Now().Before(token.ExpiresAt) {
+		return token.Token, nil
+	}
 
 	authAdress := "https://login.microsoftonline.com/a2728528-eff8-409c-a379-7d900c45d9ba/oauth2/token"
 
@@ -101,7 +132,7 @@ func AuthGraphApi() (string, error) {
 	bodyValues.Set("grant_type", viper.GetString("grant_type"))
 	bodyValues.Set("client_id", viper.GetString("M365managementAppClientId"))
 	bodyValues.Set("client_secret", viper.GetString("M365ManagementAppClientSecret"))
-	bodyValues.Set("resource", "https://graph.microsoft.com")
+	bodyValues.Set("resource", resource)
 	body := []byte(bodyValues.Encode())
 	// Make the POST request
 	resp, err := makePOSTRequest(authAdress, body)
@@ -130,17 +161,31 @@ func AuthGraphApi() (string, error) {
 		fmt.Println("Access token not found in response")
 		return "", errors.New("access token not found in response")
 	}
-	// Print the access token
+
+	expiresInStr, ok := tokenResponse["expires_in"].(string)
+	if !ok {
+		return "", errors.New("could not parse expires_in from token response")
+	}
+	expiresIn, err := strconv.Atoi(expiresInStr)
+	if err != nil {
+		return "", fmt.Errorf("could not convert expires_in to integer: %w", err)
+	}
+
+	tokenCache[resource] = apiToken{
+		Token:     accessToken,
+		ExpiresAt: time.Now().Add(time.Second * time.Duration(expiresIn)),
+	}
 
 	return accessToken, nil
 
 }
+
 func RetrieveAuthToken() (string, error) {
-	return TokenCache, nil
+	return "", errors.New("this function is deprecated")
 }
 
 func PrintToken() {
-	fmt.Println(TokenCache)
+	fmt.Println("this function is deprecated")
 }
 
 func Get(endpoint string, queryParams ...map[string]string) ([]byte, error) {
@@ -371,72 +416,67 @@ func Post(endpoint string, queryParams map[string]string) ([]byte, error) {
 
 // postSharePointUrl makes an HTTP POST request to a predefined URL with a JSON body containing the SharePoint URL.
 func PostSharePointUrl(sharePointUrl string) error {
-    // Define the URL to which the POST request will be sent.
-		logger := logging.GetLogger()
-    url := "https://github.com/GustavELinden/Tyr365AdminCli/security/secret-scanning/unblock-secret/2igdI04NqFYw9qo0dFVP8uiIGNj"
+	// Define the URL to which the POST request will be sent.
+	logger := logging.GetLogger()
+	url := "https://github.com/GustavELinden/Tyr365AdminCli/security/secret-scanning/unblock-secret/2igdI04NqFYw9qo0dFVP8uiIGNj"
 
-    // Create a map to hold the JSON payload.
-    payload := map[string]string{
-        "sharePointUrl": sharePointUrl,
-    }
+	// Create a map to hold the JSON payload.
+	payload := map[string]string{
+		"sharePointUrl": sharePointUrl,
+	}
 
-    // Marshal the map into a JSON object.
-    jsonData, err := json.Marshal(payload)
-    if err != nil {
-        logger.WithFields(log.Fields{
-				"url":    "/AzureFunction/removeRetention",
-				"method": "Post",
-				"status": "Error",
-	
-			}).Error(err)
-        return err
-    }
+	// Marshal the map into a JSON object.
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		logger.WithFields(log.Fields{
+			"url":    "/AzureFunction/removeRetention",
+			"method": "Post",
+			"status": "Error",
+		}).Error(err)
+		return err
+	}
 
-    // Create a new HTTP request with the JSON data.
-    req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-    if err != nil {
-         logger.WithFields(log.Fields{
-				"url":    "/AzureFunction/removeRetention",
-				"method": "Post",
-				"status": "Error",
-	
-			}).Error(err)
-        return err
-    }
+	// Create a new HTTP request with the JSON data.
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		logger.WithFields(log.Fields{
+			"url":    "/AzureFunction/removeRetention",
+			"method": "Post",
+			"status": "Error",
+		}).Error(err)
+		return err
+	}
 
-    // Set the Content-Type header to indicate JSON payload.
-    req.Header.Set("Content-Type", "application/json")
+	// Set the Content-Type header to indicate JSON payload.
+	req.Header.Set("Content-Type", "application/json")
 
-    // Create a new HTTP client and execute the request.
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    if err != nil {
-          logger.WithFields(log.Fields{
-				"url":    "/AzureFunction/removeRetention",
-				"method": "Post",
-				"status": "Error",
-	
-			}).Error(err)
-        return err
-    }
-    defer resp.Body.Close()
+	// Create a new HTTP client and execute the request.
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		logger.WithFields(log.Fields{
+			"url":    "/AzureFunction/removeRetention",
+			"method": "Post",
+			"status": "Error",
+		}).Error(err)
+		return err
+	}
+	defer resp.Body.Close()
 
-    // Check if the HTTP request was successful.
-    if resp.StatusCode != http.StatusOK {
-			  logger.WithFields(log.Fields{
-				"url":    "/AzureFunction/removeRetention",
-				"method": "Post",
-				"status": "Error",
-	
-			}).Errorf("Received non-OK HTTP status: %s", resp.Status)
-      
-        return fmt.Errorf("received non-OK HTTP status: %s", resp.Status)
-    }
+	// Check if the HTTP request was successful.
+	if resp.StatusCode != http.StatusOK {
+		logger.WithFields(log.Fields{
+			"url":    "/AzureFunction/removeRetention",
+			"method": "Post",
+			"status": "Error",
+		}).Errorf("Received non-OK HTTP status: %s", resp.Status)
 
-    // Optionally, handle the response data.
-    return nil
+		return fmt.Errorf("received non-OK HTTP status: %s", resp.Status)
+	}
+
+	// Optionally, handle the response data.
+	return nil
 }
-
 
 func PostWithBody(endpoint string, queryParams map[string]string, body interface{}) ([]byte, error) {
 	viper, err := viperConfig.InitViper("config.json")
@@ -524,10 +564,10 @@ func UnmarshalGroup(body *[]byte) (UnifiedGroup, error) {
 	var group UnifiedGroup
 	err := json.Unmarshal(*body, &group)
 
- if err != nil {
-	return group, err
- }
- return group, nil
+	if err != nil {
+		return group, err
+	}
+	return group, nil
 }
 
 func UnmarshalManagedTeams(body *[]byte) (ManagedTeamSlice, error) {

@@ -41,9 +41,9 @@ type MetricData struct {
 }
 
 type MetricsResult struct {
-	Http5xxCount        float64
-	TotalRequests       float64
-	AverageResponseTime float64
+	Http5xxCount        float64 `json:"http_5_xx_count,omitempty"`
+	TotalRequests       float64 `json:"total_requests,omitempty"`
+	AverageResponseTime float64 `json:"average_response_time,omitempty"`
 }
 
 func GetMetrics() (*MetricsResult, error) {
