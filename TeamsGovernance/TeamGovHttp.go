@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
@@ -24,7 +25,24 @@ type apiToken struct {
 	ExpiresAt time.Time
 }
 
-var tokenCache = make(map[string]apiToken)
+var (
+	tokenCache = make(map[string]apiToken)
+	tokenMutex sync.RWMutex
+)
+
+// Thread-safe token cache access functions
+func getTokenFromCache(resource string) (apiToken, bool) {
+	tokenMutex.RLock()
+	defer tokenMutex.RUnlock()
+	token, found := tokenCache[resource]
+	return token, found
+}
+
+func setTokenInCache(resource string, token apiToken) {
+	tokenMutex.Lock()
+	defer tokenMutex.Unlock()
+	tokenCache[resource] = token
+}
 
 func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) {
 
@@ -58,7 +76,7 @@ func AuthGovernanceApi() (string, error) {
 	}
 	resource := viper.GetString("resource")
 
-	if token, found := tokenCache[resource]; found && time.Now().Before(token.ExpiresAt) {
+	if token, found := getTokenFromCache(resource); found && time.Now().Before(token.ExpiresAt) {
 		return token.Token, nil
 	}
 
@@ -98,19 +116,25 @@ func AuthGovernanceApi() (string, error) {
 		return "", errors.New("access token not found in response")
 	}
 
-	expiresInStr, ok := tokenResponse["expires_in"].(string)
-	if !ok {
-		return "", errors.New("could not parse expires_in from token response")
-	}
-	expiresIn, err := strconv.Atoi(expiresInStr)
-	if err != nil {
-		return "", fmt.Errorf("could not convert expires_in to integer: %w", err)
+	// Handle expires_in as both string and number
+	var expiresIn int
+	if expiresInFloat, ok := tokenResponse["expires_in"].(float64); ok {
+		expiresIn = int(expiresInFloat)
+	} else if expiresInStr, ok := tokenResponse["expires_in"].(string); ok {
+		var err error
+		expiresIn, err = strconv.Atoi(expiresInStr)
+		if err != nil {
+			return "", fmt.Errorf("could not convert expires_in to integer: %w", err)
+		}
+	} else {
+		// Default to 1 hour if expires_in is missing
+		expiresIn = 3600
 	}
 
-	tokenCache[resource] = apiToken{
+	setTokenInCache(resource, apiToken{
 		Token:     accessToken,
-		ExpiresAt: time.Now().Add(time.Second * time.Duration(expiresIn)),
-	}
+		ExpiresAt: time.Now().Add(time.Second * time.Duration(expiresIn-300)), // 5-min buffer
+	})
 
 	return accessToken, nil
 }
@@ -122,7 +146,7 @@ func AuthGraphApi() (string, error) {
 	}
 	resource := "https://graph.microsoft.com"
 
-	if token, found := tokenCache[resource]; found && time.Now().Before(token.ExpiresAt) {
+	if token, found := getTokenFromCache(resource); found && time.Now().Before(token.ExpiresAt) {
 		return token.Token, nil
 	}
 
@@ -162,19 +186,25 @@ func AuthGraphApi() (string, error) {
 		return "", errors.New("access token not found in response")
 	}
 
-	expiresInStr, ok := tokenResponse["expires_in"].(string)
-	if !ok {
-		return "", errors.New("could not parse expires_in from token response")
-	}
-	expiresIn, err := strconv.Atoi(expiresInStr)
-	if err != nil {
-		return "", fmt.Errorf("could not convert expires_in to integer: %w", err)
+	// Handle expires_in as both string and number
+	var expiresIn int
+	if expiresInFloat, ok := tokenResponse["expires_in"].(float64); ok {
+		expiresIn = int(expiresInFloat)
+	} else if expiresInStr, ok := tokenResponse["expires_in"].(string); ok {
+		var err error
+		expiresIn, err = strconv.Atoi(expiresInStr)
+		if err != nil {
+			return "", fmt.Errorf("could not convert expires_in to integer: %w", err)
+		}
+	} else {
+		// Default to 1 hour if expires_in is missing
+		expiresIn = 3600
 	}
 
-	tokenCache[resource] = apiToken{
+	setTokenInCache(resource, apiToken{
 		Token:     accessToken,
-		ExpiresAt: time.Now().Add(time.Second * time.Duration(expiresIn)),
-	}
+		ExpiresAt: time.Now().Add(time.Second * time.Duration(expiresIn-300)), // 5-min buffer
+	})
 
 	return accessToken, nil
 

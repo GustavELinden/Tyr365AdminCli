@@ -23,6 +23,7 @@ func InitViper(configFileName string) (*viper.Viper, error) {
 	viperInstance.AddConfigPath(`C:\Tyrens\Scripts`)   // Path to look for the config file in the /etc directory
 	viperInstance.AddConfigPath(`C:\bilder\Documents`) // Call to check in the home directory
 	viperInstance.AddConfigPath(".")
+	viperInstance.AddConfigPath(`~/condigurationFolder/`)
 	// Find and read the config file
 	err = viperInstance.ReadInConfig()
 	if err != nil {
