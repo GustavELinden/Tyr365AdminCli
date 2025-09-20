@@ -8,11 +8,13 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"sync"
 	"time"
 
 	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
+	"github.com/olekukonko/tablewriter"
 )
 
 // apiToken represents a cached API token with expiration
@@ -70,9 +72,10 @@ func AuthArchiverApi() (string, error) {
 		return "", fmt.Errorf("error initializing viper: %w", err)
 	}
 	
-	resource := viper.GetString("archiverAdress")
+	// Use separate resource URI for OAuth (App Registration URI)
+	resource := viper.GetString("archiverResource")
 	if resource == "" {
-		return "", errors.New("archiverAdress not found in configuration")
+		return "", errors.New("archiverResource not found in configuration")
 	}
 
 	// Check cache first
@@ -88,6 +91,8 @@ func AuthArchiverApi() (string, error) {
 	bodyValues.Set("client_secret", viper.GetString("archiverSecret"))
 	bodyValues.Set("resource", resource)
 	body := []byte(bodyValues.Encode())
+
+	fmt.Printf("Debug: Auth request - Resource: %s, Client ID: %s\n", resource, viper.GetString("archiverApp"))
 
 	// Make the POST request
 	resp, err := makePOSTRequest(authAddress, body)
@@ -137,6 +142,44 @@ func AuthArchiverApi() (string, error) {
 	return accessToken, nil
 }
 
+// CustomTime handles the API's custom datetime format
+type CustomTime struct {
+	time.Time
+}
+
+// UnmarshalJSON implements custom unmarshalling for the API's datetime format
+func (ct *CustomTime) UnmarshalJSON(data []byte) error {
+	// Remove quotes from the JSON string
+	str := string(data[1 : len(data)-1])
+	
+	// Try different formats that the API might use
+	formats := []string{
+		"2006-01-02T15:04:05.999",     // With milliseconds
+		"2006-01-02T15:04:05.99",      // With 2-digit milliseconds  
+		"2006-01-02T15:04:05.9",       // With 1-digit milliseconds
+		"2006-01-02T15:04:05",         // Without milliseconds
+		"2006-01-02T15:04:05Z",        // With Z timezone
+		"2006-01-02",                  // Date only (YYYY-MM-DD)
+		time.RFC3339,                  // Standard RFC3339
+		time.RFC3339Nano,              // RFC3339 with nanoseconds
+		time.DateOnly,                 // Go 1.20+ date only format
+	}
+	
+	for _, format := range formats {
+		if t, err := time.Parse(format, str); err == nil {
+			ct.Time = t
+			return nil
+		}
+	}
+	
+	return fmt.Errorf("unable to parse time: %s", str)
+}
+
+// MarshalJSON implements custom marshalling
+func (ct CustomTime) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + ct.Time.Format("2006-01-02T15:04:05.999") + `"`), nil
+}
+
 // Data models based on OpenAPI schemas
 
 // ArchiveJob represents an archive job
@@ -147,7 +190,7 @@ type ArchiveJob struct {
 	GroupID                      string          `json:"groupId"`
 	Status                       *string         `json:"status"`
 	SharePointURL                *string         `json:"sharePointUrl"`
-	Created                      *time.Time      `json:"created"`
+	Created                      *CustomTime     `json:"created"`
 	Alias                        string          `json:"alias"`
 	ArchiveSubJobs               []ArchiveSubJob `json:"archiveSubJobs"`
 	IDExportDataJobsNavigation   interface{}     `json:"idExportDataJobsNavigation"`
@@ -160,7 +203,7 @@ type ArchiveSubJob struct {
 	Type                       string      `json:"type"`
 	Status                     *string     `json:"status"`
 	GroupID                    *string     `json:"groupId"`
-	Created                    *time.Time  `json:"created"`
+	Created                    *CustomTime `json:"created"`
 	IDArchiveJobsNavigation    *ArchiveJob `json:"idArchiveJobsNavigation"`
 }
 
@@ -180,7 +223,7 @@ type ExportDataJob struct {
 // Request represents a request
 type Request struct {
 	ID                int           `json:"id"`
-	Created           time.Time     `json:"created"`
+	Created           CustomTime    `json:"created"`
 	GroupID           *string       `json:"groupId"`
 	TeamName          *string       `json:"teamName"`
 	Endpoint          *string       `json:"endpoint"`
@@ -190,7 +233,7 @@ type Request struct {
 	ProvisioningStep  *string       `json:"provisioningStep"`
 	Message           *string       `json:"message"`
 	InitiatedBy       *string       `json:"initiatedBy"`
-	Modified          *time.Time    `json:"modified"`
+	Modified          *CustomTime   `json:"modified"`
 	RowVersion        []byte        `json:"rowVersion"`
 	ClientTaskID      *int          `json:"clientTaskId"`
 	LTPMessageSent    *bool         `json:"ltpmessageSent"`
@@ -204,13 +247,25 @@ type Request struct {
 
 // RequestStep represents a step in a request
 type RequestStep struct {
-	ID        int       `json:"id"`
-	RequestID int       `json:"requestId"`
-	Step      *string   `json:"step"`
-	Status    *string   `json:"status"`
-	Message   *string   `json:"message"`
-	Modified  *time.Time `json:"modified"`
-	Request   *Request  `json:"request"`
+	ID        int         `json:"id"`
+	RequestID int         `json:"requestId"`
+	Step      *string     `json:"step"`
+	Status    *string     `json:"status"`
+	Message   *string     `json:"message"`
+	Modified  *CustomTime `json:"modified"`
+	Request   *Request    `json:"request"`
+}
+
+// Slice types for table printing
+type ArchiveJobSlice []ArchiveJob
+type ArchiveSubJobSlice []ArchiveSubJob
+type ExportDataJobSlice []ExportDataJob
+type RequestSlice []Request
+type RequestStepSlice []RequestStep
+
+// Printer interface for table printing functionality
+type Printer interface {
+	PrintTable()
 }
 
 // ArchiverClient provides methods to interact with the M365 Archiver API
@@ -229,7 +284,7 @@ func NewArchiverClient() (*ArchiverClient, error) {
 	if baseURL == "" {
 		return nil, errors.New("archiverAdress not found in configuration")
 	}
-
+    fmt.Printf("Debug: Archiver base URL: %s\n", baseURL) // Debug print
 	return &ArchiverClient{
 		baseURL: baseURL,
 	}, nil
@@ -253,6 +308,9 @@ func (c *ArchiverClient) makeAuthenticatedRequest(method, endpoint string, body 
 		apiURL += "?" + query.Encode()
 	}
 
+	// Debug: Print the URL being called
+	fmt.Printf("Debug: Making %s request to: %s\n", method, apiURL)
+
 	// Create request
 	req, err := http.NewRequest(method, apiURL, body)
 	if err != nil {
@@ -275,7 +333,9 @@ func (c *ArchiverClient) makeAuthenticatedRequest(method, endpoint string, body 
 
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected response status: %s", resp.Status)
+		// Read response body for error details
+		errorBody, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("unexpected response status: %s, body: %s", resp.Status, string(errorBody))
 	}
 
 	// Read response body
@@ -401,6 +461,66 @@ func (c *ArchiverClient) DeleteArchiveSubJob(id int) ([]byte, error) {
 	return c.makeAuthenticatedRequest("DELETE", "/api/Archiver/DeleteArchiveSubJob", nil, params)
 }
 
+// Typed wrapper methods that return structured data instead of []byte
+// These methods combine API calls with unmarshalling for convenience
+
+// GetJobsTyped returns all jobs as a typed slice ready for table printing
+func (c *ArchiverClient) GetJobsTyped() (ArchiveJobSlice, error) {
+	body, err := c.GetJobs()
+	if err != nil {
+		return nil, err
+	}
+	jobs, err := UnmarshalArchiveJobs(body)
+	if err != nil {
+		return nil, err
+	}
+	return ArchiveJobSlice(jobs), nil
+}
+
+// GetArchiveJobByIDTyped returns a single job as a typed struct ready for table printing
+func (c *ArchiverClient) GetArchiveJobByIDTyped(id int) (*ArchiveJob, error) {
+	body, err := c.GetArchiveJobByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return UnmarshalArchiveJob(body)
+}
+
+// GetArchiveJobsByStatusTyped returns jobs by status as a typed slice ready for table printing
+func (c *ArchiverClient) GetArchiveJobsByStatusTyped(status string) (ArchiveJobSlice, error) {
+	body, err := c.GetArchiveJobsByStatus(status)
+	if err != nil {
+		return nil, err
+	}
+	jobs, err := UnmarshalArchiveJobs(body)
+	if err != nil {
+		return nil, err
+	}
+	return ArchiveJobSlice(jobs), nil
+}
+
+// GetArchiveSubJobsByStatusTyped returns sub jobs by status as a typed slice ready for table printing
+func (c *ArchiverClient) GetArchiveSubJobsByStatusTyped(status string) (ArchiveSubJobSlice, error) {
+	body, err := c.GetArchiveSubJobsByStatus(status)
+	if err != nil {
+		return nil, err
+	}
+	subJobs, err := UnmarshalArchiveSubJobs(body)
+	if err != nil {
+		return nil, err
+	}
+	return ArchiveSubJobSlice(subJobs), nil
+}
+
+// GetArchiveJobDTOTyped returns archive job DTO as a typed struct
+func (c *ArchiverClient) GetArchiveJobDTOTyped(groupID string) (*ArchiveJob, error) {
+	body, err := c.GetArchiveJobDTO(groupID)
+	if err != nil {
+		return nil, err
+	}
+	return UnmarshalArchiveJob(body)
+}
+
 // Helper functions for unmarshalling responses
 
 // UnmarshalArchiveJob unmarshals a single archive job from response body
@@ -463,6 +583,46 @@ func UnmarshalExportDataJobs(body []byte) ([]ExportDataJob, error) {
 	return jobs, nil
 }
 
+// UnmarshalRequest unmarshals a single request from response body
+func UnmarshalRequest(body []byte) (*Request, error) {
+	var request Request
+	err := json.Unmarshal(body, &request)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling request: %w", err)
+	}
+	return &request, nil
+}
+
+// UnmarshalRequests unmarshals multiple requests from response body
+func UnmarshalRequests(body []byte) ([]Request, error) {
+	var requests []Request
+	err := json.Unmarshal(body, &requests)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling requests: %w", err)
+	}
+	return requests, nil
+}
+
+// UnmarshalRequestStep unmarshals a single request step from response body
+func UnmarshalRequestStep(body []byte) (*RequestStep, error) {
+	var step RequestStep
+	err := json.Unmarshal(body, &step)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling request step: %w", err)
+	}
+	return &step, nil
+}
+
+// UnmarshalRequestSteps unmarshals multiple request steps from response body
+func UnmarshalRequestSteps(body []byte) ([]RequestStep, error) {
+	var steps []RequestStep
+	err := json.Unmarshal(body, &steps)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling request steps: %w", err)
+	}
+	return steps, nil
+}
+
 // UnmarshalString unmarshals a simple string response
 func UnmarshalString(body []byte) (string, error) {
 	var result string
@@ -481,4 +641,194 @@ func UnmarshalInteger(body []byte) (int, error) {
 		return 0, fmt.Errorf("error unmarshalling integer response: %w", err)
 	}
 	return result, nil
+}
+
+// PrintTable methods for each slice type
+
+// PrintTable displays ArchiveJob slice data in a formatted table
+func (a *ArchiveJobSlice) PrintTable() {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"ID", "GroupID", "Status", "SharePointURL", "Created", "Alias", "FilePath"})
+
+	for _, job := range *a {
+		// Handle pointer fields safely
+		status := ""
+		if job.Status != nil {
+			status = *job.Status
+		}
+		
+		sharePointURL := ""
+		if job.SharePointURL != nil {
+			sharePointURL = *job.SharePointURL
+		}
+		
+		created := ""
+		if job.Created != nil {
+			created = job.Created.Time.Format("2006-01-02 15:04:05")
+		}
+
+		row := []string{
+			fmt.Sprintf("%d", job.ID),
+			job.GroupID,
+			status,
+			sharePointURL,
+			created,
+			job.Alias,
+			job.FilePath,
+		}
+		table.Append(row)
+	}
+
+	table.Render()
+}
+
+// PrintTable displays ArchiveSubJob slice data in a formatted table
+func (a *ArchiveSubJobSlice) PrintTable() {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"ID", "IDArchiveJobs", "Type", "Status", "GroupID", "Created"})
+
+	for _, subJob := range *a {
+		// Handle pointer fields safely
+		status := ""
+		if subJob.Status != nil {
+			status = *subJob.Status
+		}
+		
+		groupID := ""
+		if subJob.GroupID != nil {
+			groupID = *subJob.GroupID
+		}
+		
+		created := ""
+		if subJob.Created != nil {
+			created = subJob.Created.Time.Format("2006-01-02 15:04:05")
+		}
+
+		row := []string{
+			fmt.Sprintf("%d", subJob.ID),
+			fmt.Sprintf("%d", subJob.IDArchiveJobs),
+			subJob.Type,
+			status,
+			groupID,
+			created,
+		}
+		table.Append(row)
+	}
+
+	table.Render()
+}
+
+// PrintTable displays ExportDataJob slice data in a formatted table
+func (e *ExportDataJobSlice) PrintTable() {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"ID", "GroupID", "Alias", "Status", "FilePath", "SiteURL", "RequestID"})
+
+	for _, job := range *e {
+		row := []string{
+			fmt.Sprintf("%d", job.ID),
+			job.GroupID,
+			job.Alias,
+			job.Status,
+			job.FilePath,
+			job.SiteURL,
+			fmt.Sprintf("%d", job.RequestID),
+		}
+		table.Append(row)
+	}
+
+	table.Render()
+}
+
+// PrintTable displays Request slice data in a formatted table
+func (r *RequestSlice) PrintTable() {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"ID", "Created", "GroupID", "TeamName", "Status", "Message", "InitiatedBy", "RetryCount"})
+
+	for _, req := range *r {
+		// Handle pointer fields safely
+		groupID := ""
+		if req.GroupID != nil {
+			groupID = *req.GroupID
+		}
+		
+		teamName := ""
+		if req.TeamName != nil {
+			teamName = *req.TeamName
+		}
+		
+		status := ""
+		if req.Status != nil {
+			status = *req.Status
+		}
+		
+		message := ""
+		if req.Message != nil {
+			message = *req.Message
+		}
+		
+		initiatedBy := ""
+		if req.InitiatedBy != nil {
+			initiatedBy = *req.InitiatedBy
+		}
+		
+		retryCount := ""
+		if req.RetryCount != nil {
+			retryCount = fmt.Sprintf("%d", *req.RetryCount)
+		}
+
+		row := []string{
+			fmt.Sprintf("%d", req.ID),
+			req.Created.Time.Format("2006-01-02 15:04:05"),
+			groupID,
+			teamName,
+			status,
+			message,
+			initiatedBy,
+			retryCount,
+		}
+		table.Append(row)
+	}
+
+	table.Render()
+}
+
+// PrintTable displays RequestStep slice data in a formatted table
+func (r *RequestStepSlice) PrintTable() {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"ID", "RequestID", "Step", "Status", "Message", "Modified"})
+
+	for _, step := range *r {
+		// Handle pointer fields safely
+		stepName := ""
+		if step.Step != nil {
+			stepName = *step.Step
+		}
+		
+		status := ""
+		if step.Status != nil {
+			status = *step.Status
+		}
+		
+		message := ""
+		if step.Message != nil {
+			message = *step.Message
+		}
+		
+		modified := ""
+		if step.Modified != nil {
+			modified = step.Modified.Time.Format("2006-01-02 15:04:05")
+		}
+
+		row := []string{
+			fmt.Sprintf("%d", step.ID),
+			fmt.Sprintf("%d", step.RequestID),
+			stepName,
+			status,
+			message,
+			modified,
+		}
+		table.Append(row)
+	}
+
+	table.Render()
 }

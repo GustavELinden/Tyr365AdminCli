@@ -13,6 +13,7 @@ import (
 	"github.com/GustavELinden/Tyr365AdminCli/cmd/sp"
 	"github.com/GustavELinden/Tyr365AdminCli/cmd/teamGov"
 	teamToolboxCmd "github.com/GustavELinden/Tyr365AdminCli/cmd/teamToolbox"
+	archivercmd "github.com/GustavELinden/Tyr365AdminCli/cmd/archiver"
 
 	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
 	"github.com/spf13/cobra"
@@ -72,6 +73,7 @@ func init() {
     rootCmd.AddCommand(graphCommands.GraphCmd)
     rootCmd.AddCommand(azure.AzureCmd)
     rootCmd.AddCommand(teamToolboxCmd.TeamToolboxCmd)
+	rootCmd.AddCommand(archivercmd.ArchiverCmd)
     // rootCmd.PersistentFlags().StringVarP(&logFilePath, "log", "l", "", "Specify the log file path")
     // rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Enable verbose logging")
     rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Specify config file (default is $HOME/.config.json)")
