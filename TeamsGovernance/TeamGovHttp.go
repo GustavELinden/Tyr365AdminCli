@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -256,14 +257,17 @@ func Get(endpoint string, queryParams ...map[string]string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("Errors: %s", err)
-		return nil, fmt.Errorf("unexpected response status: %s", resp.Status)
-	}
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		trimmedBody := strings.TrimSpace(string(body))
+		if trimmedBody == "" {
+			return body, fmt.Errorf("unexpected response status: %s", resp.Status)
+		}
+		return body, fmt.Errorf("unexpected response status: %s, body: %s", resp.Status, trimmedBody)
 	}
 
 	return body, nil

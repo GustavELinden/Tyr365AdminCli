@@ -481,3 +481,12 @@ func GetTaskETag(taskID string) (string, error) {
 	}
 	return etag, nil
 }
+
+// GetUserOwnedObjects retrieves all objects owned by a user (groups, applications, etc.)
+func (g *GraphHelper) GetUserOwnedObjects(userId string) ([]models.DirectoryObjectable, error) {
+	ownedObjects, err := g.appClient.Users().ByUserId(userId).OwnedObjects().Get(context.Background(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get owned objects: %w", err)
+	}
+	return ownedObjects.GetValue(), nil
+}
