@@ -127,7 +127,7 @@ func (r *TblTools) PrintTable() {
 
 	// Create a table to display the response data
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "ToolName", "CurrentTemplateId", "TopicName"}) // Customize the table header as needed
+	table.SetHeader([]string{"Id", "ToolName", "CurrentTemplateId", "TopicName"})
 	for _, req := range *r {
 		row := []string{
 			fmt.Sprintf("%d", req.Id),
@@ -145,7 +145,7 @@ func (r *RulesandLogics) PrintTable() {
 
 	// Create a table to display the response data
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "RuleName", "ToolId", "RuleId", "Value", "Logic"}) // Customize the table header as needed
+	table.SetHeader([]string{"Id", "RuleName", "ToolId", "RuleId", "Value", "Logic"})
 	for _, req := range *r {
 		row := []string{
 			fmt.Sprintf("%d", req.Id),

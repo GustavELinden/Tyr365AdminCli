@@ -102,7 +102,7 @@ func GetQuery(targetEndpoint string, queryParams map[string]string) ([]byte, err
 
 	// Iterate over the map of query parameters and add them to the query string.
 	for key, value := range queryParams {
-		query.Set(key, value) // Use Set or Add depending on your needs.
+		query.Set(key, value)
 	}
 
 	// Append the query string to the API URL.

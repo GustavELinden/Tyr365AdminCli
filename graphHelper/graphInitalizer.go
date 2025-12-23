@@ -72,31 +72,3 @@ func (g *GraphHelper) GetAppToken() (*string, error) {
 
 	return &token.Token, nil
 }
-
-// func listUsers(graphHelper *graphhelper.GraphHelper) {
-//     users, err := *graphHelper.GetUsers()
-//     if err != nil {
-//         log.Panicf("Error getting users: %v", err)
-//     }
-
-//     // Output each user's details
-//     for _, user := range users.GetValue() {
-//         fmt.Printf("User: %s\n", *user.GetDisplayName())
-//         fmt.Printf("  ID: %s\n", *user.GetId())
-
-//         noEmail := "NO EMAIL"
-//         email := user.GetMail()
-//         if email == nil {
-//             email = &noEmail
-//         }
-//         fmt.Printf("  Email: %s\n", *email)
-//     }
-
-//     // If GetOdataNextLink does not return nil,
-//     // there are more users available on the server
-//     nextLink := users.GetOdataNextLink()
-
-//     fmt.Println()
-//     fmt.Printf("More users available? %t\n", nextLink != nil)
-//     fmt.Println()
-// }

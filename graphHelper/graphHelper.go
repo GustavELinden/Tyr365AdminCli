@@ -15,7 +15,6 @@ import (
 	bmodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	models "github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/users"
-	//other-imports
 )
 
 type NewAssignment struct {
@@ -133,11 +132,6 @@ func (g *GraphHelper) GetDeletedGroups() ([]bmodels.Groupable, error) {
 	return groups, nil
 }
 
-// func (g *GraphHelper) GetDewwwletedGroups(teamId string , channelId string) ([]bmodels.Groupable, error) {
-// 	archived  := g.betaClient.Teams().ByTeamId(teamId).Channels().ByChannelId(channelId).Archive().Post(context.Background(), nil)
-
-//		return archived, nil
-//	}
 func (g *GraphHelper) GetUsers(selectProperties []string, amount *int32, filter string) (models.UserCollectionResponseable, error) {
 	var topValue int32
 	if amount == nil {
@@ -160,19 +154,14 @@ func (g *GraphHelper) GetUsers(selectProperties []string, amount *int32, filter 
 }
 
 func (g *GraphHelper) CreateTask(taskTitle string) (models.PlannerTaskable, error) {
-	// Initialize a new PlannerTask object
 	cfg := config.Get()
 	requestBody := models.NewPlannerTask()
-
-	// Retrieve planId and bucketId from viper configuration
 
 	planId := cfg.GetString("planId")
 	bucketId := cfg.GetString("bucketId")
 
-	// Set the planId, bucketId, and title for the task
-	requestBody.SetPlanId(&planId)
 	requestBody.SetBucketId(&bucketId)
-	requestBody.SetTitle(&taskTitle) // Changed to use function parameter
+	requestBody.SetTitle(&taskTitle)
 	result, err := g.appClient.Planner().Tasks().Post(context.Background(), requestBody, nil)
 	if err != nil {
 		return nil, err
@@ -183,8 +172,6 @@ func (g *GraphHelper) CreateTask(taskTitle string) (models.PlannerTaskable, erro
 
 func (g *GraphHelper) GetAllTasks() ([]string, error) {
 	cfg := config.Get()
-
-	// Retrieve planId and bucketId from viper configuration
 
 	planId := cfg.GetString("planId")
 	tasks, err := g.appClient.Planner().Plans().ByPlannerPlanId(planId).Tasks().Get(context.Background(), nil)
@@ -328,7 +315,7 @@ func UpdateTaskWithChecklistItems(taskID, checklistStr string) error {
 	// Initialize the checklist map
 	checklist := make(map[string]interface{})
 	for _, title := range titles {
-		checklistItemId := uuid.New().String() // Generate a unique ID for the checklist item
+			checklistItemId := uuid.New().String()
 		checklist[checklistItemId] = ChecklistItem{
 			ODataType: "microsoft.graph.plannerChecklistItem",
 			Title:     strings.TrimSpace(title),
@@ -360,7 +347,7 @@ func UpdateTaskWithChecklistItems(taskID, checklistStr string) error {
 	fmt.Println(eTag)
 	req.Header.Add("Authorization", "Bearer "+accessToken)
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("If-Match", eTag) // Concurrency control
+	req.Header.Add("If-Match", eTag)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
