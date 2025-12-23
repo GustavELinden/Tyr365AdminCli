@@ -9,206 +9,25 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
-	"sync"
-	"time"
 
-	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
+	"github.com/GustavELinden/Tyr365AdminCli/internal/auth"
+	"github.com/GustavELinden/Tyr365AdminCli/internal/config"
 	logging "github.com/GustavELinden/Tyr365AdminCli/logger"
 	"github.com/olekukonko/tablewriter"
 	log "github.com/sirupsen/logrus"
 )
 
-// var logen *logger.CustomLogger
-type apiToken struct {
-	Token     string
-	ExpiresAt time.Time
-}
-
-var (
-	tokenCache = make(map[string]apiToken)
-	tokenMutex sync.RWMutex
-)
-
-// Thread-safe token cache access functions
-func getTokenFromCache(resource string) (apiToken, bool) {
-	tokenMutex.RLock()
-	defer tokenMutex.RUnlock()
-	token, found := tokenCache[resource]
-	return token, found
-}
-
-func setTokenInCache(resource string, token apiToken) {
-	tokenMutex.Lock()
-	defer tokenMutex.Unlock()
-	tokenCache[resource] = token
-}
-
-func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) {
-
-	body := bytes.NewBuffer(bodyValues)
-
-	// Create the request
-	req, err := http.NewRequest("POST", postUrl, body)
-	if err != nil {
-
-		return nil, err
-	}
-
-	// Set the Content-Type header
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	// Make the request
-	client := http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	return resp, nil
-}
-
+// AuthGovernanceApi returns a token for the Teams Governance API.
+// Deprecated: Use auth.GetGovernanceToken() directly instead.
 func AuthGovernanceApi() (string, error) {
-	viper, err := viperConfig.InitViper("config.json")
-	if err != nil {
-		fmt.Printf("Error initializing viper: %v\n", err)
-		return "", errors.New("error initializing viper")
-	}
-	resource := viper.GetString("resource")
-
-	if token, found := getTokenFromCache(resource); found && time.Now().Before(token.ExpiresAt) {
-		return token.Token, nil
-	}
-
-	authAdress := "https://login.microsoftonline.com/a2728528-eff8-409c-a379-7d900c45d9ba/oauth2/token"
-
-	bodyValues := url.Values{}
-	bodyValues.Set("grant_type", viper.GetString("grant_type"))
-	bodyValues.Set("client_id", viper.GetString("client_id"))
-	bodyValues.Set("client_secret", viper.GetString("client_secret"))
-	bodyValues.Set("resource", resource)
-	body := []byte(bodyValues.Encode())
-	// Make the POST request
-	resp, err := makePOSTRequest(authAdress, body)
-	if err != nil {
-		fmt.Printf("Error making POST request: %v\n", err)
-		return "", errors.New("error making POST request")
-	}
-	defer resp.Body.Close()
-
-	// Check the response status code
-	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("Unexpected response status code: %d\n", resp.StatusCode)
-		return "", errors.New("unexpected response status code")
-	}
-
-	// Decode the response body
-	var tokenResponse map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
-		fmt.Printf("Error decoding response body: %v\n", err)
-		return "", errors.New("error decoding response body")
-	}
-
-	// Extract the access token
-	accessToken, ok := tokenResponse["access_token"].(string)
-	if !ok {
-		fmt.Println("Access token not found in response")
-		return "", errors.New("access token not found in response")
-	}
-
-	// Handle expires_in as both string and number
-	var expiresIn int
-	if expiresInFloat, ok := tokenResponse["expires_in"].(float64); ok {
-		expiresIn = int(expiresInFloat)
-	} else if expiresInStr, ok := tokenResponse["expires_in"].(string); ok {
-		var err error
-		expiresIn, err = strconv.Atoi(expiresInStr)
-		if err != nil {
-			return "", fmt.Errorf("could not convert expires_in to integer: %w", err)
-		}
-	} else {
-		// Default to 1 hour if expires_in is missing
-		expiresIn = 3600
-	}
-
-	setTokenInCache(resource, apiToken{
-		Token:     accessToken,
-		ExpiresAt: time.Now().Add(time.Second * time.Duration(expiresIn-300)), // 5-min buffer
-	})
-
-	return accessToken, nil
+	return auth.GetGovernanceToken()
 }
+
+// AuthGraphApi returns a token for Microsoft Graph API.
+// Deprecated: Use auth.GetGraphToken() directly instead.
 func AuthGraphApi() (string, error) {
-	viper, err := viperConfig.InitViper("config.json")
-	if err != nil {
-		fmt.Printf("Error initializing viper: %v\n", err)
-		return "", errors.New("error initializing viper")
-	}
-	resource := "https://graph.microsoft.com"
-
-	if token, found := getTokenFromCache(resource); found && time.Now().Before(token.ExpiresAt) {
-		return token.Token, nil
-	}
-
-	authAdress := "https://login.microsoftonline.com/a2728528-eff8-409c-a379-7d900c45d9ba/oauth2/token"
-
-	bodyValues := url.Values{}
-	bodyValues.Set("grant_type", viper.GetString("grant_type"))
-	bodyValues.Set("client_id", viper.GetString("M365managementAppClientId"))
-	bodyValues.Set("client_secret", viper.GetString("M365ManagementAppClientSecret"))
-	bodyValues.Set("resource", resource)
-	body := []byte(bodyValues.Encode())
-	// Make the POST request
-	resp, err := makePOSTRequest(authAdress, body)
-	if err != nil {
-		fmt.Printf("Error making POST request: %v\n", err)
-		return "", errors.New("error making POST request")
-	}
-	defer resp.Body.Close()
-
-	// Check the response status code
-	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("Unexpected response status code: %d\n", resp.StatusCode)
-		return "", errors.New("unexpected response status code")
-	}
-
-	// Decode the response body
-	var tokenResponse map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
-		fmt.Printf("Error decoding response body: %v\n", err)
-		return "", errors.New("error decoding response body")
-	}
-
-	// Extract the access token
-	accessToken, ok := tokenResponse["access_token"].(string)
-	if !ok {
-		fmt.Println("Access token not found in response")
-		return "", errors.New("access token not found in response")
-	}
-
-	// Handle expires_in as both string and number
-	var expiresIn int
-	if expiresInFloat, ok := tokenResponse["expires_in"].(float64); ok {
-		expiresIn = int(expiresInFloat)
-	} else if expiresInStr, ok := tokenResponse["expires_in"].(string); ok {
-		var err error
-		expiresIn, err = strconv.Atoi(expiresInStr)
-		if err != nil {
-			return "", fmt.Errorf("could not convert expires_in to integer: %w", err)
-		}
-	} else {
-		// Default to 1 hour if expires_in is missing
-		expiresIn = 3600
-	}
-
-	setTokenInCache(resource, apiToken{
-		Token:     accessToken,
-		ExpiresAt: time.Now().Add(time.Second * time.Duration(expiresIn-300)), // 5-min buffer
-	})
-
-	return accessToken, nil
-
+	return auth.GetGraphToken()
 }
 
 func RetrieveAuthToken() (string, error) {
@@ -220,22 +39,17 @@ func PrintToken() {
 }
 
 func Get(endpoint string, queryParams ...map[string]string) ([]byte, error) {
-
-	viper, err := viperConfig.InitViper("config.json")
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize viper: %w", err)
-	}
+	cfg := config.Get()
 
 	token, err := AuthGovernanceApi()
-
+	if err != nil {
+		return nil, fmt.Errorf("failed to get authentication token: %w", err)
+	}
 	if token == "" {
 		return nil, errors.New("failed to get authentication token")
 	}
-	if err != nil {
-		return nil, errors.New("failed to get authentication token")
-	}
 
-	apiURL := viper.GetString("resource") + "/api/teams/" + endpoint
+	apiURL := cfg.GetString("resource") + "/api/teams/" + endpoint
 	if len(queryParams) > 0 {
 		query := url.Values{}
 		for key, value := range queryParams[0] {
@@ -274,11 +88,7 @@ func Get(endpoint string, queryParams ...map[string]string) ([]byte, error) {
 }
 
 func GetQuery(targetEndpoint string, queryParams map[string]string) ([]byte, error) {
-	// Initialize Viper to load configuration, assuming viperConfig is correctly set up in your project.
-	viper, err := viperConfig.InitViper("config.json")
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize viper: %w", err)
-	}
+	cfg := config.Get()
 
 	// Retrieve the authentication token.
 	token, err := AuthGovernanceApi()
@@ -287,7 +97,7 @@ func GetQuery(targetEndpoint string, queryParams map[string]string) ([]byte, err
 	}
 
 	// Construct the API URL.
-	apiURL := viper.GetString("resource") + "/api/teams/" + targetEndpoint
+	apiURL := cfg.GetString("resource") + "/api/teams/" + targetEndpoint
 	query := url.Values{}
 
 	// Iterate over the map of query parameters and add them to the query string.
@@ -329,11 +139,7 @@ func GetQuery(targetEndpoint string, queryParams map[string]string) ([]byte, err
 }
 
 func QueryManaged(groupId, teamName, status, origin, retention, fields string) ([]ManagedTeam, error) {
-	// Initialize Viper to load configuration
-	viper, err := viperConfig.InitViper("config.json")
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize viper: %w", err)
-	}
+	cfg := config.Get()
 
 	// Retrieve the authentication token
 	token, err := AuthGovernanceApi()
@@ -342,7 +148,7 @@ func QueryManaged(groupId, teamName, status, origin, retention, fields string) (
 	}
 
 	// Construct the API URL and query parameters
-	apiURL := viper.GetString("resource") + "/api/teams/query"
+	apiURL := cfg.GetString("resource") + "/api/teams/query"
 	query := url.Values{}
 	if groupId != "" {
 		query.Set("groupId", groupId)
@@ -403,17 +209,14 @@ func QueryManaged(groupId, teamName, status, origin, retention, fields string) (
 }
 
 func Post(endpoint string, queryParams map[string]string) ([]byte, error) {
-	viper, err := viperConfig.InitViper("config.json")
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize viper: %w", err)
-	}
+	cfg := config.Get()
 
 	token, err := AuthGovernanceApi()
 	if err != nil || token == "" {
 		return nil, errors.New("failed to get authentication token")
 	}
 
-	apiURL := viper.GetString("resource") + "/api/teams/" + endpoint
+	apiURL := cfg.GetString("resource") + "/api/teams/" + endpoint
 	if len(queryParams) > 0 {
 		query := url.Values{}
 		for key, value := range queryParams {
@@ -513,17 +316,14 @@ func PostSharePointUrl(sharePointUrl string) error {
 }
 
 func PostWithBody(endpoint string, queryParams map[string]string, body interface{}) ([]byte, error) {
-	viper, err := viperConfig.InitViper("config.json")
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize viper: %w", err)
-	}
+	cfg := config.Get()
 
 	token, err := AuthGovernanceApi()
 	if err != nil || token == "" {
 		return nil, errors.New("failed to get authentication token")
 	}
 
-	apiURL := viper.GetString("resource") + "/api/teams/" + endpoint
+	apiURL := cfg.GetString("resource") + "/api/teams/" + endpoint
 	if len(queryParams) > 0 {
 		query := url.Values{}
 		for key, value := range queryParams {

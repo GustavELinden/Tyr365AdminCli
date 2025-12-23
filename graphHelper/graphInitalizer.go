@@ -2,16 +2,13 @@ package GraphHelper
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/GustavELinden/Tyr365AdminCli/internal/config"
 	auth "github.com/microsoft/kiota-authentication-azure-go"
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
 
-	// "github.com/microsoftgraph/msgraph-sdk-go/models"
-	// "github.com/microsoftgraph/msgraph-sdk-go/users"
-	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
 	graphbeta "github.com/microsoftgraph/msgraph-beta-sdk-go"
 )
 
@@ -27,15 +24,11 @@ func NewGraphHelper() *GraphHelper {
 }
 
 func (g *GraphHelper) InitializeGraphForAppAuth() error {
-	viper, err := viperConfig.InitViper("config.json")
-	if err != nil {
-		fmt.Printf("Error reading config file: %v\n", err)
+	cfg := config.Get()
 
-	}
-
-	clientId := viper.GetString("M365managementAppClientId")
-	tenantId := viper.GetString("O365TenantName")
-	clientSecret := viper.GetString("M365ManagementAppClientSecret")
+	clientId := cfg.GetString("M365managementAppClientId")
+	tenantId := cfg.GetString("O365TenantName")
+	clientSecret := cfg.GetString("M365ManagementAppClientSecret")
 
 	credential, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, nil)
 	if err != nil {

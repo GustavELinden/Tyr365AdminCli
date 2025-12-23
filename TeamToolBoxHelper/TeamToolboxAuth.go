@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
+	"github.com/GustavELinden/Tyr365AdminCli/internal/config"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -19,16 +19,16 @@ type TokenProvider struct {
 }
 
 func CreateClient() (*APIClient, error) {
-	viper, _ := viperConfig.InitViper("config.json")
+	cfg := config.Get()
 	tokenProvider := &TokenProvider{
-		ClientID:     viper.GetString("365ManagementAppId"),
-		ClientSecret: viper.GetString("365ManagementAppSecret"),
-		TenantID:     viper.GetString("O365TenantName"),
-		APIClientID:  viper.GetString("teamToolboxAppId"),
+		ClientID:     cfg.GetString("365ManagementAppId"),
+		ClientSecret: cfg.GetString("365ManagementAppSecret"),
+		TenantID:     cfg.GetString("O365TenantName"),
+		APIClientID:  cfg.GetString("teamToolboxAppId"),
 	}
 	apiClient := &APIClient{
 		AuthProvider: tokenProvider,
-		BaseURL:      viper.GetString("teamToolBoxAdress"),
+		BaseURL:      cfg.GetString("teamToolBoxAdress"),
 	}
 
 	return apiClient, nil

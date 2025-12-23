@@ -4,12 +4,11 @@ import (
 	"fmt"
 
 	"github.com/GustavELinden/Tyr365AdminCli/cmd"
-	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
+	"github.com/GustavELinden/Tyr365AdminCli/internal/config"
 )
 
 func main() {
-	_, err := viperConfig.InitViper("config.json")
-	if err != nil {
+	if err := config.Initialize("config.json"); err != nil {
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
 

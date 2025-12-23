@@ -10,136 +10,17 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
-	viperConfig "github.com/GustavELinden/Tyr365AdminCli/config"
+	"github.com/GustavELinden/Tyr365AdminCli/internal/auth"
+	"github.com/GustavELinden/Tyr365AdminCli/internal/config"
 	"github.com/olekukonko/tablewriter"
 )
 
-// apiToken represents a cached API token with expiration
-type apiToken struct {
-	Token     string
-	ExpiresAt time.Time
-}
-
-var (
-	tokenCache = make(map[string]apiToken)
-	tokenMutex sync.RWMutex
-)
-
-// Thread-safe token cache access functions
-func getTokenFromCache(resource string) (apiToken, bool) {
-	tokenMutex.RLock()
-	defer tokenMutex.RUnlock()
-	token, found := tokenCache[resource]
-	return token, found
-}
-
-func setTokenInCache(resource string, token apiToken) {
-	tokenMutex.Lock()
-	defer tokenMutex.Unlock()
-	tokenCache[resource] = token
-}
-
-// makePOSTRequest creates and executes a POST request
-func makePOSTRequest(postUrl string, bodyValues []byte) (*http.Response, error) {
-	body := bytes.NewBuffer(bodyValues)
-
-	// Create the request
-	req, err := http.NewRequest("POST", postUrl, body)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set the Content-Type header
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	// Make the request
-	client := http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	return resp, nil
-}
-
-// AuthArchiverApi gets an authentication token for the Archiver API
+// AuthArchiverApi gets an authentication token for the Archiver API.
+// Deprecated: Use auth.GetArchiverToken() directly instead.
 func AuthArchiverApi() (string, error) {
-	viper, err := viperConfig.InitViper("config.json")
-	if err != nil {
-		return "", fmt.Errorf("error initializing viper: %w", err)
-	}
-	
-	// Use separate resource URI for OAuth (App Registration URI)
-	resource := viper.GetString("archiverResource")
-	if resource == "" {
-		return "", errors.New("archiverResource not found in configuration")
-	}
-
-	// Check cache first
-	if token, found := getTokenFromCache(resource); found && time.Now().Before(token.ExpiresAt) {
-		return token.Token, nil
-	}
-
-	authAddress := "https://login.microsoftonline.com/a2728528-eff8-409c-a379-7d900c45d9ba/oauth2/token"
-
-	bodyValues := url.Values{}
-	bodyValues.Set("grant_type", "client_credentials")
-	bodyValues.Set("client_id", viper.GetString("archiverApp"))
-	bodyValues.Set("client_secret", viper.GetString("archiverSecret"))
-	bodyValues.Set("resource", resource)
-	body := []byte(bodyValues.Encode())
-
-	fmt.Printf("Debug: Auth request - Resource: %s, Client ID: %s\n", resource, viper.GetString("archiverApp"))
-
-	// Make the POST request
-	resp, err := makePOSTRequest(authAddress, body)
-	if err != nil {
-		return "", fmt.Errorf("error making POST request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Check the response status code
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected response status code: %d", resp.StatusCode)
-	}
-
-	// Decode the response body
-	var tokenResponse map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
-		return "", fmt.Errorf("error decoding response body: %w", err)
-	}
-
-	// Extract the access token
-	accessToken, ok := tokenResponse["access_token"].(string)
-	if !ok {
-		return "", errors.New("access token not found in response")
-	}
-
-	// Handle expires_in as both string and number
-	var expiresIn int
-	if expiresInFloat, ok := tokenResponse["expires_in"].(float64); ok {
-		expiresIn = int(expiresInFloat)
-	} else if expiresInStr, ok := tokenResponse["expires_in"].(string); ok {
-		var err error
-		expiresIn, err = strconv.Atoi(expiresInStr)
-		if err != nil {
-			return "", fmt.Errorf("could not convert expires_in to integer: %w", err)
-		}
-	} else {
-		// Default to 1 hour if expires_in is missing
-		expiresIn = 3600
-	}
-
-	// Cache the token with 5-minute buffer
-	setTokenInCache(resource, apiToken{
-		Token:     accessToken,
-		ExpiresAt: time.Now().Add(time.Second * time.Duration(expiresIn-300)), // 5-min buffer
-	})
-
-	return accessToken, nil
+	return auth.GetArchiverToken()
 }
 
 // CustomTime handles the API's custom datetime format
@@ -275,12 +156,9 @@ type ArchiverClient struct {
 
 // NewArchiverClient creates a new archiver client
 func NewArchiverClient() (*ArchiverClient, error) {
-	viper, err := viperConfig.InitViper("config.json")
-	if err != nil {
-		return nil, fmt.Errorf("error initializing viper: %w", err)
-	}
+	cfg := config.Get()
 	
-	baseURL := viper.GetString("archiverAdress")
+	baseURL := cfg.GetString("archiverAdress")
 	if baseURL == "" {
 		return nil, errors.New("archiverAdress not found in configuration")
 	}
