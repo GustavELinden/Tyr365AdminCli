@@ -160,6 +160,7 @@ func (g *GraphHelper) CreateTask(taskTitle string) (models.PlannerTaskable, erro
 	planId := cfg.GetString("planId")
 	bucketId := cfg.GetString("bucketId")
 
+	requestBody.SetPlanId(&planId)
 	requestBody.SetBucketId(&bucketId)
 	requestBody.SetTitle(&taskTitle)
 	result, err := g.appClient.Planner().Tasks().Post(context.Background(), requestBody, nil)
