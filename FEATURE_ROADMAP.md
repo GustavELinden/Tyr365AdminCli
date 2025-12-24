@@ -313,7 +313,7 @@ Configuration keys found:
   ✅ resource
   ✅ client_id
   ✅ client_secret
-  ✅ archiverAdress
+  ✅ archiverAddress
   ✅ archiverResource
   ⚠️  teamToolboxResource (missing - some commands may fail)
 ```

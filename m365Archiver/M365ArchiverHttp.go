@@ -158,9 +158,9 @@ type ArchiverClient struct {
 func NewArchiverClient() (*ArchiverClient, error) {
 	cfg := config.Get()
 	
-	baseURL := cfg.GetString("archiverAdress")
+	baseURL := cfg.GetString("archiverAddress")
 	if baseURL == "" {
-		return nil, errors.New("archiverAdress not found in configuration")
+		return nil, errors.New("archiverAddress not found in configuration")
 	}
     fmt.Printf("Debug: Archiver base URL: %s\n", baseURL) // Debug print
 	return &ArchiverClient{
