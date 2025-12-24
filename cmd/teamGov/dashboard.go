@@ -38,6 +38,13 @@ var dashboardCmd = &cobra.Command{
 	Use:   "dashboard",
 	Short: "Renders a dashboard",
 	Long:  `Renders a dashboard with statistics about the goverance API and todos for me`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		graphHelper = GraphHelper.NewGraphHelper()
+		err := graphHelper.InitializeGraphForAppAuth()
+		if err != nil {
+			log.Panicf("Error initializing Graph for app auth: %v\n", err)
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 
 		taskList, _ = graphHelper.GetAllTasks()
@@ -80,12 +87,7 @@ var dashboardCmd = &cobra.Command{
 }
 
 func init() {
-
-	graphHelper = GraphHelper.NewGraphHelper()
-
-	Initialize(graphHelper)
 	TeamGovCmd.AddCommand(dashboardCmd)
-
 }
 
 func clearScreen() {
@@ -97,12 +99,6 @@ func clearScreen() {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Run()
-}
-func Initialize(graphHelper *GraphHelper.GraphHelper) {
-	err := graphHelper.InitializeGraphForAppAuth()
-	if err != nil {
-		log.Panicf("Error initializing Graph for app auth: %v\n", err)
-	}
 }
 func drawDashboard() {
 	//Get all querys, rewrite this laters to filter out requests instead of querying them

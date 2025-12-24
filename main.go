@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	
 	if err := config.Initialize("config.json"); err != nil {
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}

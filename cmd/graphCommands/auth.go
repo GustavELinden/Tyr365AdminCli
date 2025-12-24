@@ -8,11 +8,8 @@ import (
 	"log"
 
 	"github.com/GustavELinden/Tyr365AdminCli/cmd/teamGov"
-	graphhelper "github.com/GustavELinden/Tyr365AdminCli/graphHelper"
 	"github.com/spf13/cobra"
 )
-
-var graphHelper *graphhelper.GraphHelper
 
 // authCmd represents the auth command
 var authCmd = &cobra.Command{
@@ -37,19 +34,10 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	graphHelper = graphhelper.NewGraphHelper()
-
-	InitializeGraph(graphHelper)
 	GraphCmd.AddCommand(authCmd)
+}
 
-}
-func InitializeGraph(graphHelper *graphhelper.GraphHelper) {
-	err := graphHelper.InitializeGraphForAppAuth()
-	if err != nil {
-		log.Panicf("Error initializing Graph for app auth: %v\n", err)
-	}
-}
-func displayAccessToken(graphHelper *graphhelper.GraphHelper) {
+func displayAccessToken() {
 	token, err := graphHelper.GetAppToken()
 	if err != nil {
 		log.Panicf("Error getting user token: %v\n", err)
